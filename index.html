@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bitácora de Inspección Preventiva</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#171a21; --card2:#1e222b; --line:#2a2f3a;
+    --text:#e8eaed; --sub:#8a90a0; --accent:#3b82f6; --good:#22c55e;
+    --warn:#f59e0b; --bad:#ef4444; --radius:14px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; padding-bottom:40px;}
+  .screen{display:none; padding:16px; max-width:480px; margin:0 auto;}
+  .screen.active{display:block;}
+  h1{font-size:18px; margin:0 0 4px;}
+  h2{font-size:15px; color:var(--sub); margin:0 0 16px; font-weight:500;}
+  .card{background:var(--card); border-radius:var(--radius); padding:16px; margin-bottom:14px; border:1px solid var(--line);}
+  label{display:block; font-size:13px; color:var(--sub); margin:12px 0 6px;}
+  label:first-child{margin-top:0;}
+  input[type=text], input[type=number], select{
+    width:100%; padding:12px; border-radius:10px; border:1px solid var(--line);
+    background:var(--card2); color:var(--text); font-size:16px;
+  }
+  input:focus, select:focus{outline:none; border-color:var(--accent);}
+  .hint{font-size:12px; color:var(--sub); margin-top:4px;}
+  .hint.auto{color:var(--good);}
+  .btn{width:100%; padding:14px; border-radius:10px; font-size:15px; font-weight:600; background:var(--accent); color:#fff; margin-top:16px; border:none; cursor:pointer; font-family:inherit;}
+  .btn:disabled{opacity:.35; cursor:not-allowed;}
+  .btn.secondary{background:var(--card2); color:var(--text); border:1px solid var(--line);}
+  .toggle2{display:flex; gap:10px; margin-top:6px;}
+  .toggle2 button{flex:1; padding:14px; border-radius:10px; background:var(--card2); color:var(--text); border:1px solid var(--line); font-size:15px; font-weight:600; cursor:pointer;}
+  .toggle2 button.sel{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;}
+  .chip{padding:10px 14px; border-radius:20px; background:var(--card2); border:1px solid var(--line); color:var(--text); font-size:14px; font-weight:500; cursor:pointer;}
+  .chip.active{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .ring-wrap{display:flex; flex-direction:column; align-items:center; padding:10px 0 6px;}
+  svg.ring{width:190px; height:190px;}
+  .ring-center{position:relative; margin-top:-140px; width:190px; text-align:center; pointer-events:none;}
+  .ring-ml{font-size:30px; font-weight:700;}
+  .ring-time{font-size:14px; color:var(--sub); margin-top:2px;}
+  .section-label{font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--sub); margin:18px 0 8px;}
+  .grid-actions{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .action-btn{padding:16px 10px; border-radius:12px; background:var(--card2); border:1px solid var(--line); color:var(--text); font-size:14px; font-weight:600; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer;}
+  .action-btn .ic{font-size:20px;}
+  .action-btn:disabled{opacity:.3; cursor:not-allowed;}
+  .action-btn.glow{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset;}
+  .tramo-open{background:var(--card2); border:1px solid var(--accent); border-radius:12px; padding:14px; margin-bottom:10px;}
+  .tramo-open .t-name{font-weight:700; font-size:15px;}
+  .tramo-open .t-sub{font-size:12px; color:var(--sub); margin-top:2px;}
+  .event-list{margin-top:10px; padding-left:14px; border-left:2px solid var(--line);}
+  .event-item{font-size:13px; color:var(--sub); padding:4px 0;}
+  .close-tramo-btn{margin-top:12px; background:var(--bad); color:#fff; padding:10px; border-radius:8px; width:100%; font-weight:600; cursor:pointer; border:none;}
+  .overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50; align-items:flex-end;}
+  .overlay.active{display:flex;}
+  .modal{background:var(--card); width:100%; max-width:480px; margin:0 auto; border-radius:18px 18px 0 0; padding:20px 16px 26px; max-height:88vh; overflow-y:auto;}
+  .modal h3{margin:0 0 14px; font-size:16px;}
+  .modal-close{float:right; background:none; color:var(--sub); font-size:20px; padding:0 4px; cursor:pointer; border:none;}
+  .summary-line{display:flex; justify-content:space-between; font-size:14px; padding:6px 0; border-bottom:1px solid var(--line);}
+  .summary-line:last-child{border-bottom:none;}
+  .legend-box{padding:14px; border-radius:10px; font-weight:600; font-size:14px; text-align:center; margin-top:10px;}
+  .legend-good{background:#123322; color:var(--good);}
+  .legend-bad{background:#3a2410; color:var(--warn);}
+  .legend-info{background:#12233a; color:#60a5fa;}
+  .toast{position:fixed; bottom:16px; left:16px; right:16px; max-width:448px; margin:0 auto; background:var(--card2); border:1px solid var(--line); padding:12px 14px; border-radius:10px; font-size:13px; display:none; z-index:60;}
+  .toast.show{display:block;}
+  .badge{display:inline-block; font-size:11px; padding:2px 8px; border-radius:8px; background:var(--card2); color:var(--sub); margin-left:6px;}
+  .clipboard-box{background:#0d1013; border:1px solid var(--line); border-radius:8px; padding:10px; font-family:monospace; font-size:11px; white-space:pre-wrap; word-break:break-word; max-height:250px; overflow:auto; margin-top:8px; display:none;}
+  .sync-status{text-align:center; font-size:12px; margin-bottom:10px; color:var(--good);}
+</style>
+</head>
+<body>
+
+<!-- PANTALLA 1: APERTURA -->
+<div class="screen active" id="screen-apertura">
+  <h1>Nueva jornada</h1>
+  <h2>Apertura</h2>
+  <div class="card">
+    <label>Placa</label>
+    <select id="ap-placa">
+      <option value="">Selecciona una placa...</option>
+      <option value="KPN 603|Vactor">KPN 603 — Vactor</option>
+      <option value="LPK 666|Vactor">LPK 666 — Vactor</option>
+      <option value="WOW 047|Vactor">WOW 047 — Vactor</option>
+      <option value="GFP 750|Vactor">GFP 750 — Vactor</option>
+      <option value="GKV 830|Succión">GKV 830 — Succión</option>
+      <option value="JLO 019|Succión">JLO 019 — Succión</option>
+      <option value="LPL301|Ingemac">LPL301 — Ingemac</option>
+      <option value="KPN 602|Ingemac">KPN 602 — Ingemac</option>
+      <option value="D1|Demequipos">D1 — Demequipos</option>
+      <option value="D2|Demequipos">D2 — Demequipos</option>
+      <option value="D3|Demequipos">D3 — Demequipos</option>
+      <option value="D4|Demequipos">D4 — Demequipos</option>
+      <option value="Z1|ZGYJ">Z1 — ZGYJ</option>
+      <option value="Z2|ZGYJ">Z2 — ZGYJ</option>
+      <option value="Z3|ZGYJ">Z3 — ZGYJ</option>
+      <option value="Z4|ZGYJ">Z4 — ZGYJ</option>
+    </select>
+
+    <label>Barrio <span class="badge" id="gps-status">GPS...</span></label>
+    <input type="text" id="ap-barrio" placeholder="Se autocompleta por GPS">
+    <div class="hint auto">📍 Autocompletado por GPS. Editable si falla.</div>
+
+    <button class="btn" id="btn-abrir-jornada" disabled>Iniciar jornada</button>
+  </div>
+</div>
+
+<!-- PANTALLA 2: DASHBOARD -->
+<div class="screen" id="screen-dashboard">
+  <div class="sync-status" id="sync-status">● Sincronizado</div>
+
+  <div class="ring-wrap">
+    <svg class="ring" viewBox="0 0 190 190">
+      <circle cx="95" cy="95" r="80" fill="none" stroke="#242833" stroke-width="14"/>
+      <circle id="ring-progress" cx="95" cy="95" r="80" fill="none" stroke="var(--good)" stroke-width="14"
+        stroke-linecap="round" stroke-dasharray="502" stroke-dashoffset="502" transform="rotate(-90 95 95)"/>
+    </svg>
+    <div class="ring-center">
+      <div class="ring-ml" id="disp-ml">0 ML</div>
+      <div class="ring-time" id="disp-time">8:00 h</div>
+    </div>
+  </div>
+
+  <button class="btn secondary" style="margin-bottom:10px;" onclick="verBitacoraCompleta()">📋 Ver bitácora completa</button>
+
+  <div id="tramo-abierto-box"></div>
+
+  <div class="section-label">Tramo</div>
+  <div class="grid-actions" id="box-sin-tramo">
+    <input type="text" id="nuevo-tramo-nombre" placeholder="Nombre del tramo" style="grid-column:1/3;">
+    <div class="toggle2" style="grid-column:1/3;">
+      <button id="btn-flujo" onclick="seleccionarSentidoNuevo('Flujo')">Flujo</button>
+      <button id="btn-contraflujo" onclick="seleccionarSentidoNuevo('Contraflujo')">Contraflujo</button>
+    </div>
+    <button class="btn" id="btn-abrir-tramo" style="grid-column:1/3;" disabled onclick="abrirTramo()">Abrir tramo</button>
+  </div>
+
+  <div class="section-label">Otras actividades</div>
+  <div class="grid-actions">
+    <button class="action-btn" onclick="abrirModal('modal-desob')" id="act-desob" disabled><span class="ic">🔧</span>Desobstrucción</button>
+    <button class="action-btn glow" onclick="abrirModal('modal-m3')"><span class="ic">💧</span>Carga de agua</button>
+    <button class="action-btn" onclick="abrirModal('modal-sacos')" id="act-sacos" style="display:none;"><span class="ic">🧱</span>Sacos</button>
+    <button class="action-btn" onclick="abrirModal('modal-resanes')" id="act-resanes" style="display:none;"><span class="ic">🩹</span>Resanes</button>
+    <button class="action-btn" onclick="abrirModal('modal-novedad')" style="grid-column:1/3;"><span class="ic">⚠️</span>Novedad</button>
+  </div>
+
+  <button class="btn secondary" style="margin-top:24px;" onclick="irACierreJornada()">Cerrar jornada</button>
+</div>
+
+<!-- MODAL: BITÁCORA COMPLETA -->
+<div class="overlay" id="ov-bitacora">
+  <div class="modal">
+    <button class="modal-close" onclick="cerrarModal('modal-bitacora')">✕</button>
+    <h3>📋 Bitácora acumulada</h3>
+    <div class="clipboard-box" id="bitacora-completa-text" style="display:block;"></div>
+    <button class="btn" onclick="copiarBitacoraCompleta()">📋 Copiar todo</button>
+  </div>
+</div>
+
+<!-- MODAL: DESOBSTRUCCIÓN -->
+<div class="overlay" id="ov-desob">
+  <div class="modal">
+    <button class="modal-close" onclick="cerrarModal('modal-desob')">✕</button>
+    <h3>Desobstrucción</h3>
+    <label>Tramo</label>
+    <input type="text" id="desob-tramo" placeholder="Nombre del tramo">
+    <label>Sentido</label>
+    <div class="toggle2">
+      <button id="desob-flujo" onclick="toggleSentido('desob',this,'Flujo')">Flujo</button>
+      <button id="desob-contraflujo" onclick="toggleSentido('desob',this,'Contraflujo')">Contraflujo</button>
+    </div>
+    <button class="btn" onclick="registrarDesobstruccion()">Registrar</button>
+  </div>
+</div>
+
+<!-- MODAL: M3 AGUA -->
+<div class="overlay" id="ov-m3">
+  <div class="modal">
+    <button class="modal-close" onclick="cerrarModal('modal-m3')">✕</button>
+    <h3>Carga de agua</h3>
+    <label>M3</label>
+    <input type="number" id="m3-valor" min="0" step="0.1" placeholder="0">
+    <label>Barrio</label>
+    <input type="text" id="m3-barrio">
+    <button class="btn" onclick="registrarM3()">Registrar</button>
+  </div>
+</div>
+
+<!-- MODAL: SACOS -->
+<div class="overlay" id="ov-sacos">
+  <div class="modal">
+    <button class="modal-close" onclick="cerrarModal('modal-sacos')">✕</button>
+    <h3>Sacos</h3>
+    <label>Cantidad</label>
+    <input type="number" id="sacos-valor" min="0" step="1" placeholder="0">
+    <button class="btn" onclick="registrarSacos()">Registrar</button>
+  </div>
+</div>
+
+<!-- MODAL: RESANES -->
+<div class="overlay" id="ov-resanes">
+  <div class="modal">
+    <button class="modal-close" onclick="cerrarModal('modal-resanes')">✕</button>
+    <h3>Resanes</h3>
+    <label>Cantidad</label>
+    <input type="number" id="resanes-valor" min="0" step="1" placeholder="0">
+    <button class="btn" onclick="registrarResanes()">Registrar</button>
+  </div>
+</div>
+
+<!-- MODAL: NOVEDAD -->
+<div class="overlay" id="ov-novedad">
+  <div class="modal">
+    <button class="modal-close" onclick="cerrarModal('modal-novedad')">✕</button>
+    <h3>Novedad</h3>
+    <label>Causa</label>
+    <div class="chips" id="novedad-causas">
+      <button class="chip" onclick="seleccionarCausa(this,'Hidráulica')">Hidráulica</button>
+      <button class="chip" onclick="seleccionarCausa(this,'Mecánica/Motor')">Mecánica/Motor</button>
+      <button class="chip" onclick="seleccionarCausa(this,'Succión/Presión')">Succión/Presión</button>
+      <button class="chip" onclick="seleccionarCausa(this,'Eléctrica')">Eléctrica</button>
+      <button class="chip" onclick="seleccionarCausa(this,'Descarga de lodos')">Descarga de lodos</button>
+      <button class="chip" onclick="seleccionarCausa(this,'Revisión')">Revisión</button>
+      <button class="chip" onclick="seleccionarCausa(this,'Fuerza mayor')">Fuerza mayor</button>
+    </div>
+    <label>¿Regresa a operación?</label>
+    <div class="toggle2">
+      <button id="nov-si" onclick="seleccionarRegresa('SI')">Sí</button>
+      <button id="nov-no" onclick="seleccionarRegresa('NO')">No</button>
+    </div>
+    <button class="btn" id="btn-registrar-novedad" disabled onclick="registrarNovedad()">Registrar</button>
+  </div>
+</div>
+
+<!-- MODAL: CIERRE DE TRAMO -->
+<div class="overlay" id="ov-cierre-tramo">
+  <div class="modal">
+    <h3>Cerrar tramo</h3>
+    <label>¿Apto CCTV?</label>
+    <div class="toggle2">
+      <button id="ct-si" onclick="seleccionarAptoCCTV('SI')">Sí</button>
+      <button id="ct-no" onclick="seleccionarAptoCCTV('NO')">No</button>
+    </div>
+    <div id="ct-ml-box" style="display:none;">
+      <label>ML</label>
+      <input type="number" id="ct-ml" min="0" step="1">
+    </div>
+    <div id="ct-obs-box" style="display:none;">
+      <label>Observación (obligatoria)</label>
+      <input type="text" id="ct-obs" placeholder="¿Por qué no es apto?">
+    </div>
+    <button class="btn" id="btn-confirmar-cierre-tramo" disabled onclick="confirmarCierreTramo()">Confirmar cierre</button>
+  </div>
+</div>
+
+<!-- PANTALLA 3: CIERRE DE JORNADA -->
+<div class="screen" id="screen-cierre">
+  <h1>Cierre de jornada</h1>
+  <h2>Resumen automático</h2>
+  <div class="card">
+    <div class="summary-line"><span>Placa</span><strong id="rs-placa"></strong></div>
+    <div class="summary-line"><span>Contratista</span><strong id="rs-contratista"></strong></div>
+    <div class="summary-line"><span>Barrio inicio</span><strong id="rs-barrio"></strong></div>
+    <div class="summary-line"><span>Duración</span><strong id="rs-duracion"></strong></div>
+  </div>
+  <div class="card">
+    <div class="summary-line"><span>ML total (CCTV=SI)</span><strong id="rs-ml"></strong></div>
+    <div class="summary-line"><span>Meta (250 ML)</span><strong id="rs-delta"></strong></div>
+    <div class="summary-line"><span>Desobstrucciones</span><strong id="rs-desob"></strong></div>
+    <div class="summary-line"><span>Novedades</span><strong id="rs-novedades"></strong></div>
+    <div id="rs-leyenda"></div>
+  </div>
+  <div class="card" id="rs-tramos"></div>
+  <label>Inspector que cierra</label>
+  <select id="cierre-inspector">
+    <option value="">Selecciona...</option>
+    <option>Marlon Ledezma</option>
+    <option>Luis Díaz</option>
+    <option>Luis Vergara</option>
+    <option>Armando Pájaro</option>
+  </select>
+  <button class="btn" onclick="confirmarYExportar()">Confirmar y exportar</button>
+  <button class="btn secondary" onclick="volverDashboard()">Volver</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==================== CONFIG ==================== */
+const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzPKYIM-lwGkLpxXqk4_OY9BbsFrm9ZyFRSneBTEx3aaNPCm4Vs4gjKdQR71DNfJAsWRw/exec";
+
+const CAUSAS_EQUIPO = ["Hidráulica","Mecánica/Motor","Succión/Presión","Eléctrica","Descarga de lodos"];
+const CAUSAS_EXPLICADAS = ["Revisión","Fuerza mayor"];
+const JORNADA_SEG = 8*3600;
+const META_ML = 250;
+const CONTRATISTAS_SACOS_RESANES = ["Demequipos","ZGYJ"];
+const SYNC_QUEUE_KEY = "bitacora_sync_queue_v1";
+
+/* ==================== ESTADO ==================== */
+let STATE = {
+  placa:null, contratista:null, barrio:null, gps:null,
+  horaInicio:null, horaFin:null, inspector:null,
+  tramos:[], sueltos:[], tramoActivoId:null,
+  cerrada:false, actividadCount:0, bitacoraInterna:""
+};
+
+let timerHandle=null;
+let segRestantes = JORNADA_SEG;
+let nuevoSentido = null;
+let tempSentido = {desob:null};
+let tempCausa = null;
+let tempRegresa = null;
+let tempApto = null;
+
+/* ==================== UTILIDADES ==================== */
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2600);
+}
+function capitalizar(s){ if(!s) return s; return s.charAt(0).toUpperCase()+s.slice(1).toLowerCase(); }
+function nowISO(){ return new Date().toISOString(); }
+function fmtHora(iso){ const d=new Date(iso); return d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}); }
+function getGPS(){
+  return new Promise((resolve)=>{
+    if(!navigator.geolocation){ resolve(null); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos=>resolve({lat:pos.coords.latitude,lng:pos.coords.longitude}),
+      ()=>resolve(null), {timeout:8000}
+    );
+  });
+}
+async function reverseGeocode(gps){
+  if(!gps) return "";
+  try{
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${gps.lat}&lon=${gps.lng}&format=json`);
+    const d = await r.json();
+    const a = d.address || {};
+    return capitalizar(a.suburb || a.neighbourhood || a.quarter || a.city_district || a.village || "");
+  }catch(e){ return ""; }
+}
+
+/* ==================== ENCABEZADO BITÁCORA ==================== */
+function generarEncabezado(){
+  const placaLimpia = STATE.placa ? STATE.placa.replace(/\s+/g,'') : '';
+  const fecha = STATE.horaInicio ? new Date(STATE.horaInicio).toLocaleDateString('es-CO') : '';
+  const turno = STATE.horaInicio
+    ? (new Date(STATE.horaInicio).getHours() >= 6 && new Date(STATE.horaInicio).getHours() < 18 ? 'Diurno' : 'Nocturno')
+    : '';
+  const barrio = STATE.barrio ? capitalizar(STATE.barrio) : '';
+  return `#_preventivo\n${placaLimpia}|${fecha}|${turno}|${barrio}\n`;
+}
+
+/* ==================== COPIAR AL PORTAPAPELES ==================== */
+function copiarAlPortapapeles(texto){
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(texto)
+      .then(()=>toast("✅ Copiado al portapapeles"))
+      .catch(()=>fallbackCopy(texto));
+  } else { fallbackCopy(texto); }
+}
+function fallbackCopy(texto){
+  const textarea = document.createElement('textarea');
+  textarea.value = texto;
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  document.body.appendChild(textarea);
+  textarea.select();
+  textarea.setSelectionRange(0, 99999);
+  try{ document.execCommand('copy'); toast("✅ Copiado al portapapeles"); }
+  catch(e){ toast("❌ Error al copiar"); }
+  document.body.removeChild(textarea);
+}
+
+/* ==================== ENVÍO DE HITOS EN TIEMPO REAL ==================== */
+function cargarCola(){
+  try{
+    const raw = localStorage.getItem(SYNC_QUEUE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function guardarCola(cola){
+  try{ localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(cola)); }catch(e){ /* no-op si no hay storage disponible */ }
+}
+function encolarHito(payload){
+  const cola = cargarCola();
+  cola.push(payload);
+  guardarCola(cola);
+  actualizarEstadoSync();
+}
+function actualizarEstadoSync(){
+  const el = document.getElementById('sync-status');
+  if(!el) return;
+  const cola = cargarCola();
+  if(cola.length === 0){ el.textContent = '● Sincronizado'; el.style.color = 'var(--good)'; }
+  else { el.textContent = `● ${cola.length} pendiente(s) por sincronizar`; el.style.color = 'var(--warn)'; }
+}
+async function enviarPayload(payload){
+  const resp = await fetch(WEBHOOK_URL, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload)
+  });
+  const texto = await resp.text();
+  let data;
+  try{ data = JSON.parse(texto); }
+  catch(e){ throw new Error('Respuesta no válida del servidor'); }
+  if(!data.ok) throw new Error(data.error || 'Error desconocido del servidor');
+  return data;
+}
+async function enviarHitoRemoto(tipo, datos){
+  const payload = {
+    accion:'registrarHito', tipo, datos,
+    placa: STATE.placa, contratista: STATE.contratista,
+    barrio: STATE.barrio, inspector: STATE.inspector || ''
+  };
+  try{
+    await enviarPayload(payload);
+    actualizarEstadoSync();
+    procesarCola();
+  }catch(e){
+    console.error('Error enviando hito, se encola para reintento:', e);
+    encolarHito(payload);
+  }
+}
+async function procesarCola(){
+  let cola = cargarCola();
+  if(cola.length === 0) return;
+  const restante = [];
+  for(const item of cola){
+    try{ await enviarPayload(item); }
+    catch(e){ restante.push(item); }
+  }
+  guardarCola(restante);
+  actualizarEstadoSync();
+}
+
+/* ==================== REGISTRAR HITO LOCAL Y COPIAR ==================== */
+function registrarHito(bloqueTexto){
+  STATE.actividadCount++;
+  const encabezado = generarEncabezado();
+  const bloqueConNumero = bloqueTexto.replace('[Actividad del dia #; X]', `[Actividad del dia #; ${STATE.actividadCount}]`);
+  const textoCopiar = encabezado + '\n' + bloqueConNumero;
+  if(STATE.bitacoraInterna === ""){ STATE.bitacoraInterna = bloqueConNumero; }
+  else { STATE.bitacoraInterna += '\n\n' + bloqueConNumero; }
+  copiarAlPortapapeles(textoCopiar);
+}
+
+/* ==================== VER BITÁCORA COMPLETA ==================== */
+function verBitacoraCompleta(){
+  const encabezado = generarEncabezado();
+  document.getElementById('bitacora-completa-text').textContent = encabezado + '\n' + STATE.bitacoraInterna;
+  document.getElementById('ov-bitacora').classList.add('active');
+}
+function copiarBitacoraCompleta(){
+  const encabezado = generarEncabezado();
+  copiarAlPortapapeles(encabezado + '\n' + STATE.bitacoraInterna);
+}
+
+/* ==================== VISIBILIDAD POR CONTRATISTA ==================== */
+function actualizarVisibilidadActividadesContratista(){
+  const habilitar = CONTRATISTAS_SACOS_RESANES.includes(STATE.contratista);
+  document.getElementById('act-sacos').style.display = habilitar ? '' : 'none';
+  document.getElementById('act-resanes').style.display = habilitar ? '' : 'none';
+}
+
+/* ==================== APERTURA ==================== */
+document.getElementById('ap-placa').addEventListener('change', e=>{
+  const val = e.target.value;
+  if(val){
+    const parts = val.split('|');
+    STATE.placa = parts[0];
+    STATE.contratista = parts[1];
+  } else { STATE.placa = null; STATE.contratista = null; }
+  validarApertura();
+});
+document.getElementById('ap-barrio').addEventListener('input', e=>{
+  STATE.barrio = capitalizar(e.target.value); validarApertura();
+});
+function validarApertura(){
+  const ok = STATE.placa && STATE.barrio;
+  document.getElementById('btn-abrir-jornada').disabled = !ok;
+}
+document.getElementById('btn-abrir-jornada').onclick = ()=>{
+  STATE.horaInicio = nowISO();
+  document.getElementById('screen-apertura').classList.remove('active');
+  document.getElementById('screen-dashboard').classList.add('active');
+  actualizarVisibilidadActividadesContratista();
+  iniciarCronometro();
+  renderDashboard();
+  enviarHitoRemoto('jornadaInicio', {});
+};
+async function initGPSApertura(){
+  document.getElementById('gps-status').textContent="GPS...";
+  const gps = await getGPS();
+  STATE.gps = gps;
+  const barrio = await reverseGeocode(gps);
+  if(barrio){
+    document.getElementById('ap-barrio').value = barrio;
+    STATE.barrio = barrio;
+    document.getElementById('gps-status').textContent="✓ auto";
+  } else {
+    document.getElementById('gps-status').textContent="manual";
+  }
+  validarApertura();
+}
+initGPSApertura();
+
+/* ==================== CRONÓMETRO / ANILLO ==================== */
+function iniciarCronometro(){
+  timerHandle = setInterval(()=>{
+    segRestantes -= 1;
+    if(segRestantes <= 0){ segRestantes = 0; clearInterval(timerHandle); }
+    actualizarReloj();
+  }, 1000);
+}
+function actualizarReloj(){
+  const h = Math.floor(segRestantes/3600);
+  const m = Math.floor((segRestantes%3600)/60);
+  document.getElementById('disp-time').textContent = `${h}:${String(m).padStart(2,'0')} h`;
+  const totalML = calcularMLTotal();
+  document.getElementById('disp-ml').textContent = `${totalML} ML`;
+  const circumference = 502;
+  const progresoML = Math.min(totalML/META_ML, 1);
+  const offset = circumference * (1-progresoML);
+  const ring = document.getElementById('ring-progress');
+  ring.setAttribute('stroke-dashoffset', offset);
+  const fraccion = 1 - (segRestantes/JORNADA_SEG);
+  let color = "var(--good)";
+  if(progresoML < fraccion*0.85) color = "var(--warn)";
+  if(progresoML < fraccion*0.6) color = "var(--bad)";
+  ring.setAttribute('stroke', color);
+}
+function calcularMLTotal(){
+  return STATE.tramos.filter(t=>t.cierre && t.cierre.apto==="SI")
+    .reduce((sum,t)=>sum+(Number(t.cierre.ml)||0), 0);
+}
+
+/* ==================== TRAMO ==================== */
+function seleccionarSentidoNuevo(s){
+  nuevoSentido = s;
+  document.getElementById('btn-flujo').classList.toggle('sel', s==='Flujo');
+  document.getElementById('btn-contraflujo').classList.toggle('sel', s==='Contraflujo');
+  validarNuevoTramo();
+}
+document.getElementById('nuevo-tramo-nombre').addEventListener('input', validarNuevoTramo);
+function validarNuevoTramo(){
+  const nombre = document.getElementById('nuevo-tramo-nombre').value.trim();
+  document.getElementById('btn-abrir-tramo').disabled = !(nombre && nuevoSentido);
+}
+async function abrirTramo(){
+  const nombre = document.getElementById('nuevo-tramo-nombre').value.trim();
+  const sentido = nuevoSentido;
+  const gps = await getGPS();
+  const id = 't'+Date.now();
+  const horaISO = nowISO();
+  STATE.tramos.push({id, tramo:nombre, sentido, horaInicio:horaISO, gps, cierre:null, eventos:[]});
+  STATE.tramoActivoId = id;
+  const gpsStr = gps ? `${gps.lat} -${gps.lng}` : 'sin GPS';
+  registrarHito(`[Tramo: ${nombre}]\n[sentido: ${sentido}]\n[Hora: ${fmtHora(horaISO)}]\n[gps: ${gpsStr}]\n[Actividad del dia #; X]`);
+  enviarHitoRemoto('tramoInicio', {tramo: nombre, sentido});
+  document.getElementById('nuevo-tramo-nombre').value="";
+  nuevoSentido=null;
+  document.getElementById('btn-flujo').classList.remove('sel');
+  document.getElementById('btn-contraflujo').classList.remove('sel');
+  renderDashboard();
+}
+
+/* ==================== DASHBOARD RENDER ==================== */
+function renderDashboard(){
+  const box = document.getElementById('tramo-abierto-box');
+  const sinTramoBox = document.getElementById('box-sin-tramo');
+  const actDesob = document.getElementById('act-desob');
+  const activo = STATE.tramos.find(t=>t.id===STATE.tramoActivoId && !t.cierre);
+
+  if(activo){
+    sinTramoBox.style.display="none";
+    actDesob.disabled=false;
+    box.innerHTML = `
+      <div class="section-label">Tramo activo</div>
+      <div class="tramo-open">
+        <div class="t-name">${activo.tramo} <span class="badge">${activo.sentido}</span></div>
+        <div class="t-sub">Iniciado ${fmtHora(activo.horaInicio)}</div>
+        <div class="event-list" id="lista-eventos-tramo"></div>
+        <button class="close-tramo-btn" onclick="abrirModal('modal-cierre-tramo')">Cerrar tramo</button>
+      </div>`;
+    const lista = document.getElementById('lista-eventos-tramo');
+    activo.eventos.forEach(ev=>{
+      let label = '';
+      if(ev.tipo==='Desobstrucción') label = `Desobstrucción — ${ev.tramo} (${ev.sentido})`;
+      if(ev.tipo==='M3') label = `Agua — ${ev.m3} m3${Number(ev.m3)===0?' (fuera de servicio)':''}`;
+      if(ev.tipo==='Sacos') label = `Sacos — ${ev.cantidad}`;
+      if(ev.tipo==='Resanes') label = `Resanes — ${ev.cantidad}`;
+      if(ev.tipo==='Novedad') label = `Novedad — ${ev.causa} (regresa: ${ev.regresa})`;
+      const d=document.createElement('div');
+      d.className='event-item'; d.textContent=`${fmtHora(ev.hora)} · ${label}`;
+      lista.appendChild(d);
+    });
+  } else {
+    box.innerHTML="";
+    sinTramoBox.style.display="grid";
+    actDesob.disabled=true;
+  }
+}
+
+/* ==================== DESOBSTRUCCIÓN ==================== */
+function toggleSentido(prefix, btn, val){
+  tempSentido[prefix]=val;
+  document.getElementById(prefix+'-flujo').classList.toggle('sel', val==='Flujo');
+  document.getElementById(prefix+'-contraflujo').classList.toggle('sel', val==='Contraflujo');
+}
+async function registrarDesobstruccion(){
+  const activo = STATE.tramos.find(t=>t.id===STATE.tramoActivoId && !t.cierre);
+  if(!activo){ toast("No hay tramo activo"); return; }
+  const tramoTxt = document.getElementById('desob-tramo').value.trim() || activo.tramo;
+  const sentido = tempSentido.desob || activo.sentido;
+  const horaISO = nowISO();
+  const gps = await getGPS();
+  activo.eventos.push({tipo:'Desobstrucción', tramo:tramoTxt, sentido, hora:horaISO});
+  const gpsStr = gps ? `${gps.lat} -${gps.lng}` : 'sin GPS';
+  registrarHito(`[Tramo: ${tramoTxt}]\n[sentido: ${sentido}]\n[Hora: ${fmtHora(horaISO)}]\n[gps: ${gpsStr}]\n[Actividad del dia #; X]`);
+  enviarHitoRemoto('desob', {tramo: tramoTxt, sentido});
+  document.getElementById('desob-tramo').value="";
+  tempSentido.desob=null;
+  document.getElementById('desob-flujo').classList.remove('sel');
+  document.getElementById('desob-contraflujo').classList.remove('sel');
+  cerrarModal('modal-desob');
+  renderDashboard();
+}
+
+/* ==================== M3 AGUA ==================== */
+async function registrarM3(){
+  const valor = Number(document.getElementById('m3-valor').value || 0);
+  const barrio = capitalizar(document.getElementById('m3-barrio').value.trim()) || STATE.barrio;
+  const horaISO = nowISO();
+  const gps = await getGPS();
+  const ev = {tipo:'M3', m3:valor, barrio, hora:horaISO};
+  const activo = STATE.tramos.find(t=>t.id===STATE.tramoActivoId && !t.cierre);
+  if(activo){ activo.eventos.push(ev); } else { STATE.sueltos.push(ev); }
+  const gpsStr = gps ? `${gps.lat} -${gps.lng}` : 'sin GPS';
+  registrarHito(`[M3: ${valor}]\n[Barrio: ${barrio}]\n[Hora: ${fmtHora(horaISO)}]\n[gps: ${gpsStr}]\n[Actividad del dia #; X]`);
+  enviarHitoRemoto('m3', {valor, barrio, fueraServicio: valor===0});
+  document.getElementById('m3-valor').value="";
+  cerrarModal('modal-m3');
+  renderDashboard();
+  if(valor===0){ toast("Hidrante fuera de servicio — puedes reintentar con otro"); }
+}
+async function prefillM3Barrio(){
+  const gps = await getGPS();
+  const barrio = await reverseGeocode(gps);
+  if(barrio) document.getElementById('m3-barrio').value = barrio;
+}
+
+/* ==================== SACOS ==================== */
+async function registrarSacos(){
+  const valor = Number(document.getElementById('sacos-valor').value || 0);
+  const horaISO = nowISO();
+  const gps = await getGPS();
+  const ev = {tipo:'Sacos', cantidad:valor, hora:horaISO};
+  const activo = STATE.tramos.find(t=>t.id===STATE.tramoActivoId && !t.cierre);
+  if(activo){ activo.eventos.push(ev); } else { STATE.sueltos.push(ev); }
+  const gpsStr = gps ? `${gps.lat} -${gps.lng}` : 'sin GPS';
+  registrarHito(`[Sacos: ${valor}]\n[Hora: ${fmtHora(horaISO)}]\n[gps: ${gpsStr}]\n[Actividad del dia #; X]`);
+  enviarHitoRemoto('sacos', {cantidad: valor});
+  document.getElementById('sacos-valor').value="";
+  cerrarModal('modal-sacos');
+  renderDashboard();
+}
+
+/* ==================== RESANES ==================== */
+async function registrarResanes(){
+  const valor = Number(document.getElementById('resanes-valor').value || 0);
+  const horaISO = nowISO();
+  const gps = await getGPS();
+  const ev = {tipo:'Resanes', cantidad:valor, hora:horaISO};
+  const activo = STATE.tramos.find(t=>t.id===STATE.tramoActivoId && !t.cierre);
+  if(activo){ activo.eventos.push(ev); } else { STATE.sueltos.push(ev); }
+  const gpsStr = gps ? `${gps.lat} -${gps.lng}` : 'sin GPS';
+  registrarHito(`[Resanes: ${valor}]\n[Hora: ${fmtHora(horaISO)}]\n[gps: ${gpsStr}]\n[Actividad del dia #; X]`);
+  enviarHitoRemoto('resanes', {cantidad: valor});
+  document.getElementById('resanes-valor').value="";
+  cerrarModal('modal-resanes');
+  renderDashboard();
+}
+
+/* ==================== NOVEDAD ==================== */
+function seleccionarCausa(btn, causa){
+  tempCausa = causa;
+  document.querySelectorAll('#novedad-causas .chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  validarNovedad();
+}
+function seleccionarRegresa(val){
+  tempRegresa = val;
+  document.getElementById('nov-si').classList.toggle('sel', val==='SI');
+  document.getElementById('nov-no').classList.toggle('sel', val==='NO');
+  validarNovedad();
+}
+function validarNovedad(){
+  document.getElementById('btn-registrar-novedad').disabled = !(tempCausa && tempRegresa);
+}
+async function registrarNovedad(){
+  const horaISO = nowISO();
+  const gps = await getGPS();
+  const ev = {tipo:'Novedad', causa:tempCausa, regresa:tempRegresa, hora:horaISO};
+  const activo = STATE.tramos.find(t=>t.id===STATE.tramoActivoId && !t.cierre);
+  if(activo){ activo.eventos.push(ev); } else { STATE.sueltos.push(ev); }
+  const gpsStr = gps ? `${gps.lat} -${gps.lng}` : 'sin GPS';
+  registrarHito(`[Novedad: ${tempCausa}]\n[Regresa: ${tempRegresa}]\n[Hora: ${fmtHora(horaISO)}]\n[gps: ${gpsStr}]\n[Actividad del dia #; X]`);
+  enviarHitoRemoto('novedad', {causa: tempCausa, regresa: tempRegresa});
+  if(tempRegresa==='NO'){
+    clearInterval(timerHandle);
+    segRestantes = 0;
+    actualizarReloj();
+    if(activo){ activo.cierre = {apto:null, ml:0, obs:`Turno finalizado por novedad: ${tempCausa}`}; }
+    cerrarModal('modal-novedad');
+    toast("Turno finalizado por novedad. Procede al cierre de jornada.");
+    resetNovedadTemp();
+    irACierreJornada();
+    return;
+  }
+  cerrarModal('modal-novedad');
+  resetNovedadTemp();
+  renderDashboard();
+}
+function resetNovedadTemp(){
+  tempCausa=null; tempRegresa=null;
+  document.querySelectorAll('#novedad-causas .chip').forEach(c=>c.classList.remove('active'));
+  document.getElementById('nov-si').classList.remove('sel');
+  document.getElementById('nov-no').classList.remove('sel');
+  document.getElementById('btn-registrar-novedad').disabled=true;
+}
+
+/* ==================== CIERRE DE TRAMO ==================== */
+function seleccionarAptoCCTV(val){
+  tempApto = val;
+  document.getElementById('ct-si').classList.toggle('sel', val==='SI');
+  document.getElementById('ct-no').classList.toggle('sel', val==='NO');
+  document.getElementById('ct-ml-box').style.display = val==='SI' ? 'block':'none';
+  document.getElementById('ct-obs-box').style.display = val==='NO' ? 'block':'none';
+  validarCierreTramo();
+}
+document.getElementById('ct-ml').addEventListener('input', validarCierreTramo);
+document.getElementById('ct-obs').addEventListener('input', validarCierreTramo);
+function validarCierreTramo(){
+  let ok=false;
+  if(tempApto==='SI'){ ok = document.getElementById('ct-ml').value !== "" && Number(document.getElementById('ct-ml').value) >= 0; }
+  if(tempApto==='NO'){ ok = document.getElementById('ct-obs').value.trim().length>0; }
+  document.getElementById('btn-confirmar-cierre-tramo').disabled = !ok;
+}
+async function confirmarCierreTramo(){
+  const activo = STATE.tramos.find(t=>t.id===STATE.tramoActivoId && !t.cierre);
+  if(!activo) return;
+  const horaISO = nowISO();
+  const gps = await getGPS();
+  if(tempApto==='SI'){
+    const ml = Number(document.getElementById('ct-ml').value);
+    activo.cierre = {apto:'SI', ml:ml, obs:''};
+  } else {
+    activo.cierre = {apto:'NO', ml:0, obs:capitalizar(document.getElementById('ct-obs').value.trim())};
+  }
+  activo.horaFin = horaISO;
+  STATE.tramoActivoId = null;
+  const gpsStr = gps ? `${gps.lat} -${gps.lng}` : 'sin GPS';
+  if(tempApto==='SI'){
+    registrarHito(`[Cierre tramo: ${activo.tramo}]\n[Apto CCTV: SI]\n[ML: ${activo.cierre.ml}]\n[Hora: ${fmtHora(horaISO)}]\n[gps: ${gpsStr}]\n[Actividad del dia #; X]`);
+  } else {
+    registrarHito(`[Cierre tramo: ${activo.tramo}]\n[Apto CCTV: NO]\n[Observación: ${activo.cierre.obs}]\n[Hora: ${fmtHora(horaISO)}]\n[gps: ${gpsStr}]\n[Actividad del dia #; X]`);
+  }
+  enviarHitoRemoto('tramoCierre', {tramo: activo.tramo, aptoCCTV: activo.cierre.apto, ml: activo.cierre.ml, observacion: activo.cierre.obs});
+  document.getElementById('ct-ml').value="";
+  document.getElementById('ct-obs').value="";
+  tempApto=null;
+  document.getElementById('ct-si').classList.remove('sel');
+  document.getElementById('ct-no').classList.remove('sel');
+  cerrarModal('modal-cierre-tramo');
+  renderDashboard();
+  actualizarReloj();
+}
+
+/* ==================== MODALES ==================== */
+const MODAL_MAP = {
+  'modal-desob':'ov-desob', 'modal-m3':'ov-m3', 'modal-sacos':'ov-sacos', 'modal-resanes':'ov-resanes',
+  'modal-novedad':'ov-novedad', 'modal-cierre-tramo':'ov-cierre-tramo', 'modal-bitacora':'ov-bitacora'
+};
+function abrirModal(id){
+  document.getElementById(MODAL_MAP[id]).classList.add('active');
+  if(id==='modal-m3'){ prefillM3Barrio(); }
+}
+function cerrarModal(id){
+  document.getElementById(MODAL_MAP[id]).classList.remove('active');
+}
+
+/* ==================== CIERRE DE JORNADA ==================== */
+function todosLosEventos(){
+  const evs = [...STATE.sueltos];
+  STATE.tramos.forEach(t=> evs.push(...t.eventos));
+  return evs;
+}
+function irACierreJornada(){
+  STATE.horaFin = nowISO();
+  document.getElementById('screen-dashboard').classList.remove('active');
+  document.getElementById('screen-cierre').classList.add('active');
+  renderResumen();
+}
+function volverDashboard(){
+  document.getElementById('screen-cierre').classList.remove('active');
+  document.getElementById('screen-dashboard').classList.add('active');
+}
+function renderResumen(){
+  document.getElementById('rs-placa').textContent = STATE.placa;
+  document.getElementById('rs-contratista').textContent = STATE.contratista;
+  document.getElementById('rs-barrio').textContent = STATE.barrio;
+  const ini = new Date(STATE.horaInicio), fin = new Date(STATE.horaFin);
+  const horas = ((fin-ini)/3600000).toFixed(1);
+  document.getElementById('rs-duracion').textContent = `${horas} h`;
+  const mlTotal = calcularMLTotal();
+  const delta = mlTotal - META_ML;
+  document.getElementById('rs-ml').textContent = `${mlTotal} ML`;
+  document.getElementById('rs-delta').textContent = (delta>=0? '+':'')+delta+' ML';
+  const evs = todosLosEventos();
+  const desob = evs.filter(e=>e.tipo==='Desobstrucción');
+  const novedades = evs.filter(e=>e.tipo==='Novedad');
+  document.getElementById('rs-desob').textContent = desob.length;
+  document.getElementById('rs-novedades').textContent = novedades.length ? novedades.map(n=>n.causa).join(', ') : '0';
+  const leyendaBox = document.getElementById('rs-leyenda');
+  const novEquipo = novedades.filter(n=>CAUSAS_EQUIPO.includes(n.causa));
+  const novExplicada = novedades.filter(n=>CAUSAS_EXPLICADAS.includes(n.causa));
+  let html='';
+  if(delta>=0){ html = `<div class="legend-box legend-good">✅ Meta cumplida</div>`; }
+  else if(novEquipo.length>=1){ html = `<div class="legend-box legend-bad">🔧 Revisar placa — ${[...new Set(novEquipo.map(n=>n.causa))].join(', ')}</div>`; }
+  else if(novExplicada.length>=1){ html = `<div class="legend-box legend-info">ℹ️ Déficit explicado — ${[...new Set(novExplicada.map(n=>n.causa))].join(', ')}</div>`; }
+  else if(desob.length>=1){ html = `<div class="legend-box legend-bad">📍 Revisar zona/ritmo — tramo exigente (${desob.length} desobstrucciones)</div>`; }
+  else { html = `<div class="legend-box legend-bad">📍 Revisar zona/ritmo</div>`; }
+  leyendaBox.innerHTML = html;
+  const tramosBox = document.getElementById('rs-tramos');
+  tramosBox.innerHTML = '<div class="section-label" style="margin-top:0;">Tramos</div>';
+  STATE.tramos.forEach(t=>{
+    const line = document.createElement('div');
+    line.className='summary-line';
+    if(t.cierre && t.cierre.apto==='SI'){ line.innerHTML = `<span>${t.tramo} (${t.sentido})</span><strong>${t.cierre.ml} ML</strong>`; }
+    else if(t.cierre && t.cierre.apto==='NO'){ line.innerHTML = `<span>${t.tramo} (${t.sentido}) — no apto</span><strong>—</strong>`; }
+    else { line.innerHTML = `<span>${t.tramo} (${t.sentido}) — sin cerrar</span><strong>—</strong>`; }
+    tramosBox.appendChild(line);
+  });
+}
+
+/* ==================== EXPORTAR / CIERRE ==================== */
+async function confirmarYExportar(){
+  const cierreInspector = document.getElementById('cierre-inspector').value;
+  if(!cierreInspector){ toast("Selecciona el inspector que cierra"); return; }
+  STATE.inspector = cierreInspector;
+  await enviarHitoRemoto('jornadaCierre', {});
+  toast("✅ Jornada cerrada");
+  reiniciarApp();
+}
+
+/* ==================== REINICIO TRAS CIERRE ==================== */
+function reiniciarApp(){
+  clearInterval(timerHandle);
+  STATE = {
+    placa:null, contratista:null, barrio:null, gps:null,
+    horaInicio:null, horaFin:null, inspector:null,
+    tramos:[], sueltos:[], tramoActivoId:null,
+    cerrada:false, actividadCount:0, bitacoraInterna:""
+  };
+  segRestantes = JORNADA_SEG;
+  nuevoSentido = null;
+  tempSentido = {desob:null};
+  tempCausa = null; tempRegresa = null; tempApto = null;
+
+  document.getElementById('screen-cierre').classList.remove('active');
+  document.getElementById('screen-dashboard').classList.remove('active');
+  document.getElementById('screen-apertura').classList.add('active');
+
+  document.getElementById('ap-placa').value = "";
+  document.getElementById('ap-barrio').value = "";
+  document.getElementById('btn-abrir-jornada').disabled = true;
+  document.getElementById('cierre-inspector').value = "";
+  document.getElementById('act-sacos').style.display = 'none';
+  document.getElementById('act-resanes').style.display = 'none';
+
+  actualizarReloj();
+  initGPSApertura();
+  actualizarEstadoSync();
+}
+
+/* ==================== INICIO ==================== */
+window.addEventListener('load', ()=>{
+  actualizarEstadoSync();
+  procesarCola();
+});
+setInterval(procesarCola, 30000);
+</script>
+</body>
+</html>
