@@ -108,7 +108,7 @@
 
 <!-- PANTALLA 2: DASHBOARD -->
 <div class="screen" id="screen-dashboard">
-  <div class="sync-status" id="sync-status">● Sincronizado</div>
+  <div class="sync-status" id="sync-status">● Listo</div>
 
   <div class="ring-wrap">
     <svg class="ring" viewBox="0 0 190 190">
@@ -288,7 +288,7 @@
 
 <script>
 /* ==================== CONFIG ==================== */
-const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxImlgmnvbZb5BhJVqRf4E0AwmQKRrrgKETxE2p99D1f_zukXlmEDSGh3Fsjnig3Vn__A/exec";
+const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfERpt4S-r5oDgoAsGMDFYq-RdhOiFsszFjjPTnA_Utm3ZSVQ/formResponse";
 
 const CAUSAS_EQUIPO = ["Hidráulica","Mecánica/Motor","Succión/Presión","Eléctrica","Descarga de lodos"];
 const CAUSAS_EXPLICADAS = ["Revisión","Fuerza mayor"];
@@ -373,7 +373,7 @@ function fallbackCopy(texto){
   document.body.removeChild(textarea);
 }
 
-/* ==================== ENVÍO DE HITOS EN TIEMPO REAL ==================== */
+/* ==================== ENVÍO DE DATOS AL GOOGLE FORM ==================== */
 function cargarCola(){
   try{
     const raw = localStorage.getItem(SYNC_QUEUE_KEY);
@@ -381,7 +381,7 @@ function cargarCola(){
   }catch(e){ return []; }
 }
 function guardarCola(cola){
-  try{ localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(cola)); }catch(e){ /* no-op si no hay storage disponible */ }
+  try{ localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(cola)); }catch(e){}
 }
 function encolarHito(payload){
   const cola = cargarCola();
@@ -393,37 +393,51 @@ function actualizarEstadoSync(){
   const el = document.getElementById('sync-status');
   if(!el) return;
   const cola = cargarCola();
-  if(cola.length === 0){ el.textContent = '● Sincronizado'; el.style.color = 'var(--good)'; }
-  else { el.textContent = `● ${cola.length} pendiente(s) por sincronizar`; el.style.color = 'var(--warn)'; }
+  if(cola.length === 0){ el.textContent = '● Listo'; el.style.color = 'var(--good)'; }
+  else { el.textContent = `● ${cola.length} pendiente(s)`; el.style.color = 'var(--warn)'; }
 }
-async function enviarPayload(payload){
-  const resp = await fetch(WEBHOOK_URL, {
-    method:'POST',
-    headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify(payload)
+
+async function enviarPayload(payload) {
+  const formData = new URLSearchParams();
+  
+  formData.append('entry.698566237', payload.tipo || '');
+  formData.append('entry.759456156', JSON.stringify(payload.datos || {}));
+  formData.append('entry.1958505050', payload.placa || '');
+  formData.append('entry.1438075125', payload.contratista || '');
+  formData.append('entry.1542290425', payload.barrio || '');
+  formData.append('entry.1617359207', payload.inspector || '');
+  
+  await fetch(FORM_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: formData.toString()
   });
-  const texto = await resp.text();
-  let data;
-  try{ data = JSON.parse(texto); }
-  catch(e){ throw new Error('Respuesta no válida del servidor'); }
-  if(!data.ok) throw new Error(data.error || 'Error desconocido del servidor');
-  return data;
+  
+  return { ok: true };
 }
+
 async function enviarHitoRemoto(tipo, datos){
   const payload = {
-    accion:'registrarHito', tipo, datos,
-    placa: STATE.placa, contratista: STATE.contratista,
-    barrio: STATE.barrio, inspector: STATE.inspector || ''
+    tipo: tipo,
+    datos: datos,
+    placa: STATE.placa,
+    contratista: STATE.contratista,
+    barrio: STATE.barrio,
+    inspector: STATE.inspector || ''
   };
   try{
     await enviarPayload(payload);
     actualizarEstadoSync();
     procesarCola();
   }catch(e){
-    console.error('Error enviando hito, se encola para reintento:', e);
+    console.error('Error enviando hito:', e);
     encolarHito(payload);
   }
 }
+
 async function procesarCola(){
   let cola = cargarCola();
   if(cola.length === 0) return;
@@ -436,7 +450,7 @@ async function procesarCola(){
   actualizarEstadoSync();
 }
 
-/* ==================== REGISTRAR HITO LOCAL Y COPIAR ==================== */
+/* ==================== REGISTRAR HITO LOCAL ==================== */
 function registrarHito(bloqueTexto){
   STATE.actividadCount++;
   const encabezado = generarEncabezado();
