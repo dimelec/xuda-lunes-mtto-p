@@ -100,6 +100,12 @@
     /* ==================== ADVERTENCIA INSPECTOR ==================== */
     .advertencia{background:var(--bad);color:#fff;padding:12px;border-radius:8px;font-weight:700;text-align:center;margin-top:8px;display:none;}
     .advertencia.show{display:block;}
+    
+    /* ==================== CAJA OBSERVACIONES CON SUBCONJUNTOS ==================== */
+    .obs-box{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:14px;border:1px solid var(--line);}
+    .obs-diagnostico{padding:14px;border-radius:10px;font-weight:700;font-size:15px;text-align:center;margin-bottom:12px;background:#3a2410;color:var(--warn);border:2px solid var(--warn);}
+    .obs-separador{border-top:1px dashed var(--line);margin:12px 0;}
+    .obs-texto{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px;color:var(--text);font-size:15px;min-height:80px;width:100%;font-family:inherit;}
   </style>
 </head>
 <body>
@@ -141,7 +147,7 @@
 
   <div id="tramo-abierto-box"></div>
 
-  <!-- Sección de tramo (operador: 1 tramo, máx 6 dígitos) -->
+  <!-- Tramo (operador: 1 tramo, máx 6 dígitos) -->
   <div class="section-label">Tramo</div>
   <div class="grid-actions" id="box-sin-tramo">
     <input type="text" id="nuevo-tramo-nombre" class="tramo-input-highlight" placeholder="Máx 6 números" maxlength="6" inputmode="numeric" style="grid-column:1/3;">
@@ -169,20 +175,20 @@
   <h1>Modo Inspector</h1>
   <h2 id="inspector-id">KPN603|8/9/2026|D|ML</h2>
   
-  <!-- Solo en inspector: hora de inicio y horas totales -->
+  <!-- Hora de inicio y horas totales (solo inspector) -->
   <div class="card">
     <label>Hora de inicio</label>
     <input type="time" id="insp-hora-inicio" value="">
     <label>Horas totales</label>
-    <input type="number" id="insp-horas-totales" min="0" max="12" step="0.5" placeholder="0">
+    <input type="number" id="insp-horas-totales" min="0" max="12" step="0.5" placeholder="7">
   </div>
   
-  <!-- Tramos varios separados por coma (inspector) -->
+  <!-- Tramos varios (inspector) + ML total (máx 80) -->
   <div class="card">
     <label>Tramos (separados por coma)</label>
     <input type="text" id="insp-tramos" placeholder="123, 456, 789">
-    <label>ML total (máx 130)</label>
-    <input type="number" id="insp-ml" min="0" max="130" step="1" placeholder="75" oninput="actualizarDiagnosticoInspector()">
+    <label>ML total (máx 80)</label>
+    <input type="number" id="insp-ml" min="0" max="80" step="1" placeholder="75" oninput="actualizarDiagnosticoInspector()">
   </div>
   
   <div class="card">
@@ -242,12 +248,16 @@
     <div class="summary-line"><span>ML total</span><strong id="rs-ml"></strong></div>
     <div class="summary-line"><span>Desobstrucción</span><strong id="rs-desob"></strong></div>
     <div class="summary-line"><span>Carga de agua</span><strong id="rs-m3"></strong></div>
-    <div id="rs-justificar"></div>
   </div>
-  <div class="card">
-    <label>Observaciones</label>
-    <textarea id="cierre-obs" rows="4" placeholder="Justificar actividades realizadas"></textarea>
+  
+  <!-- CAJA OBSERVACIONES CON 2 SUBCONJUNTOS -->
+  <div class="obs-box">
+    <label style="margin-top:0;">Observaciones</label>
+    <div id="rs-justificar" style="margin-bottom:12px;"></div>
+    <div class="obs-separador"></div>
+    <textarea id="cierre-obs" rows="4" placeholder="Justifique qué actividades se realizaron" class="obs-texto"></textarea>
   </div>
+  
   <button class="btn secondary" onclick="volverFormulario()">Volver</button>
   <button class="btn" onclick="confirmarYExportar()">🖨️ Imprimir PDF y Cerrar</button>
 </div>
@@ -315,7 +325,7 @@
     <button class="modal-close" onclick="cerrarModal('modal-cierre-tramo')">✕</button>
     <h3>Cerrar tramo</h3>
     <label>¿Apto para CCTV?</label>
-    <button class="btn-si-apto" id="btn-si-apto" onclick="activarBotonSI()">✅ SÍ<input type="number" id="ct-ml" min="0" max="130" placeholder="ML (máx 130)"></button>
+    <button class="btn-si-apto" id="btn-si-apto" onclick="activarBotonSI()">✅ SÍ<input type="number" id="ct-ml" min="0" max="80" placeholder="ML (máx 80)"></button>
     <button class="btn-no-apto" id="btn-no-apto" onclick="activarBotonNO()" style="margin-top:10px;">❌ NO<input type="text" id="ct-obs" placeholder="Observación"></button>
     <button class="btn" id="btn-confirmar-cierre-tramo" disabled onclick="confirmarCierreTramo()">Confirmar</button>
   </div>
@@ -338,8 +348,8 @@
     <label>1. Tramos (separados por coma)</label>
     <input type="text" id="form-tramos" placeholder="123, 456, 789">
     
-    <label>2. ML total (máx 130)</label>
-    <input type="number" id="form-ml" min="0" max="130" step="1" placeholder="75">
+    <label>2. ML total (máx 80)</label>
+    <input type="number" id="form-ml" min="0" max="80" step="1" placeholder="75">
     
     <label>3. Desobstrucción</label>
     <input type="text" id="form-desob" placeholder="Tramo">
@@ -374,6 +384,8 @@
 const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfhMKFjKQtPKiTzgf3tJOwai4u3taRsOTdP-NcQub6zmA7Yeg/formResponse";
 const META_ML = 250;
 const HORAS_BASE = 7;
+const RANGO_MIN = 220;
+const RANGO_MAX = 280;
 const SYNC_QUEUE_KEY = "mtto_prev_sync_v1";
 const STATE_KEY = "mtto_prev_state_v1";
 
@@ -822,12 +834,12 @@ function actualizarDiagnosticoInspector(){
     const novExplicada=STATE.novedades.filter(n=>['Fuerza mayor','Fatiga','Salud'].includes(n.tipo)).length;
     const novLodos=STATE.novedades.filter(n=>n.tipo==='Lodos').length;
     let html='';
-    if(ml>=220&&ml<=280){html='<div class="legend-box legend-good">✅ Meta cumplida</div>';}
-    else if(ml<220&&novAveria>0){html='<div class="justificar-box">🔧 Atención elementos — Justificar '+horasNoJust+' h</div>';}
-    else if(ml<220&&novExplicada>0){html='<div class="justificar-box">ℹ️ Déficit justificable — Justificar '+horasNoJust+' h</div>';}
-    else if(ml<220&&novLodos>0){html='<div class="justificar-box">📍 Revisar zona/ritmo — Justificar '+horasNoJust+' h</div>';}
-    else if(ml<220){html='<div class="justificar-box">📍 Revisar zona/ritmo — Justificar '+horasNoJust+' h</div>';}
-    else if(ml>280){html='<div class="justificar-box">📈 Justificar exceso — '+(ml-280)+' ML</div>';}
+    if(ml>=RANGO_MIN&&ml<=RANGO_MAX){html='<div class="legend-box legend-good">✅ Meta cumplida</div>';}
+    else if(ml<RANGO_MIN&&novAveria>0){html='<div class="justificar-box">🔧 Atención elementos — Horas por justificar: '+horasNoJust+' h</div>';}
+    else if(ml<RANGO_MIN&&novExplicada>0){html='<div class="justificar-box">ℹ️ Déficit justificable — Horas por justificar: '+horasNoJust+' h</div>';}
+    else if(ml<RANGO_MIN&&novLodos>0){html='<div class="justificar-box">📍 Revisar zona/ritmo — Horas por justificar: '+horasNoJust+' h</div>';}
+    else if(ml<RANGO_MIN){html='<div class="justificar-box">📍 Revisar zona/ritmo — Horas por justificar: '+horasNoJust+' h</div>';}
+    else if(ml>RANGO_MAX){html='<div class="justificar-box">📈 Justificar exceso — '+(ml-RANGO_MAX)+' ML</div>';}
     box.innerHTML=html;
   } else {box.innerHTML='';}
 }
@@ -890,12 +902,12 @@ function renderResumen(){
   const novExplicada=STATE.novedades.filter(n=>['Fuerza mayor','Fatiga','Salud'].includes(n.tipo)).length;
   const novLodos=STATE.novedades.filter(n=>n.tipo==='Lodos').length;
   let html='';
-  if(mlTotal>=220&&mlTotal<=280){html='<div class="legend-box legend-good">✅ Meta cumplida</div>';}
-  else if(mlTotal<220&&novAveria>0){html='<div class="justificar-box">🔧 Atención elementos — Justificar '+horasNoJust+' h</div>';}
-  else if(mlTotal<220&&novExplicada>0){html='<div class="justificar-box">ℹ️ Déficit justificable — Justificar '+horasNoJust+' h</div>';}
-  else if(mlTotal<220&&novLodos>0){html='<div class="justificar-box">📍 Revisar zona/ritmo — Justificar '+horasNoJust+' h</div>';}
-  else if(mlTotal<220){html='<div class="justificar-box">📍 Revisar zona/ritmo — Justificar '+horasNoJust+' h</div>';}
-  else if(mlTotal>280){html='<div class="justificar-box">📈 Justificar exceso — '+(mlTotal-280)+' ML</div>';}
+  if(mlTotal>=RANGO_MIN&&mlTotal<=RANGO_MAX){html='<div class="legend-box legend-good">✅ Meta cumplida</div>';}
+  else if(mlTotal<RANGO_MIN&&novAveria>0){html='<div class="obs-diagnostico">🔧 Atención elementos — Horas por justificar: '+horasNoJust+' h<br><span style="font-size:12px;">Justifique en observaciones qué actividades se realizaron</span></div>';}
+  else if(mlTotal<RANGO_MIN&&novExplicada>0){html='<div class="obs-diagnostico">ℹ️ Déficit justificable — Horas por justificar: '+horasNoJust+' h<br><span style="font-size:12px;">Justifique en observaciones qué actividades se realizaron</span></div>';}
+  else if(mlTotal<RANGO_MIN&&novLodos>0){html='<div class="obs-diagnostico">📍 Revisar zona/ritmo — Horas por justificar: '+horasNoJust+' h<br><span style="font-size:12px;">Justifique en observaciones qué actividades se realizaron</span></div>';}
+  else if(mlTotal<RANGO_MIN){html='<div class="obs-diagnostico">📍 Revisar zona/ritmo — Horas por justificar: '+horasNoJust+' h<br><span style="font-size:12px;">Justifique en observaciones qué actividades se realizaron</span></div>';}
+  else if(mlTotal>RANGO_MAX){html='<div class="obs-diagnostico">📈 Justificar exceso — '+(mlTotal-RANGO_MAX)+' ML<br><span style="font-size:12px;">Justifique por qué se lograron más ML en el mismo tiempo</span></div>';}
   justificarBox.innerHTML=html;
   
   const tramosBox=document.getElementById('rs-tramos');
@@ -914,6 +926,7 @@ function renderResumen(){
   }
 }
 
+/* ==================== VOLVER ==================== */
 function volverFormulario(){
   document.getElementById('screen-cierre').classList.remove('active');
   preguntarVerificarActividades();
@@ -930,35 +943,75 @@ function generarPDFCierre(){
   const mlTotal=mlSistema+STATE.cierre.mlManual;
   const horasNoJust=calcularHorasNoJust(mlTotal);
   const fecha=STATE.horaInicio?new Date(STATE.horaInicio).toLocaleDateString('es-CO'):'';
+  const novAveria=STATE.novedades.filter(n=>['Hidráulica','Mecánica/Motor','Succión/Presión','Eléctrica'].includes(n.tipo)).length;
+  const novExplicada=STATE.novedades.filter(n=>['Fuerza mayor','Fatiga','Salud'].includes(n.tipo)).length;
+  const novLodos=STATE.novedades.filter(n=>n.tipo==='Lodos').length;
+  let diagnostico='';
+  if(mlTotal>=RANGO_MIN&&mlTotal<=RANGO_MAX){diagnostico='✅ Meta cumplida';}
+  else if(mlTotal<RANGO_MIN&&novAveria>0){diagnostico=`🔧 Atención elementos — Horas por justificar: ${horasNoJust} h<br><span style="font-size:11px;">Justifique en observaciones qué actividades se realizaron</span>`;}
+  else if(mlTotal<RANGO_MIN&&novExplicada>0){diagnostico=`ℹ️ Déficit justificable — Horas por justificar: ${horasNoJust} h<br><span style="font-size:11px;">Justifique en observaciones qué actividades se realizaron</span>`;}
+  else if(mlTotal<RANGO_MIN&&novLodos>0){diagnostico=`📍 Revisar zona/ritmo — Horas por justificar: ${horasNoJust} h<br><span style="font-size:11px;">Justifique en observaciones qué actividades se realizaron</span>`;}
+  else if(mlTotal<RANGO_MIN){diagnostico=`📍 Revisar zona/ritmo — Horas por justificar: ${horasNoJust} h<br><span style="font-size:11px;">Justifique en observaciones qué actividades se realizaron</span>`;}
+  else if(mlTotal>RANGO_MAX){diagnostico=`📈 Justificar exceso — ${mlTotal-RANGO_MAX} ML<br><span style="font-size:11px;">Justifique por qué se lograron más ML en el mismo tiempo</span>`;}
+  
   const contenido=`
-    <div style="font-family:Arial,sans-serif;color:#000;background:#fff;padding:20px;">
-      <div style="background:#1a1a2e;color:#fff;padding:12px;border-radius:8px;margin-bottom:10px;">
-        <div style="font-size:14px;font-weight:800;">#_Mtto_Preventivo</div>
+    <div style="font-family:Arial,sans-serif;color:#000;background:#fff;padding:20px;max-width:800px;margin:0 auto;">
+      <!-- ENCABEZADO -->
+      <div style="background:#1a1a2e;color:#fff;padding:15px;border-radius:8px;margin-bottom:10px;text-align:center;">
+        <h1 style="font-size:16px;font-weight:800;margin:0;">#_Mtto_Preventivo</h1>
+        <p style="font-size:11px;margin:5px 0 0;">Hoja de Cierre de Jornada</p>
       </div>
-      <div style="background:#fff;border:1px solid #333;border-radius:8px;padding:10px;margin-bottom:8px;">
-        <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:4px;">DATOS</div>
+      
+      <!-- DATOS -->
+      <div style="background:#fafafa;border:1px solid #f97316;border-radius:8px;padding:12px;margin-bottom:8px;">
+        <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:6px;text-transform:uppercase;">Datos de la Jornada</div>
         <div style="font-size:12px;color:#000;">Placa: ${STATE.placa}<br>Contratista: ${STATE.contratista}<br>Fecha: ${fecha}<br>Inspector: ${STATE.inspector||'—'}</div>
       </div>
-      <div style="background:#fff;border:1px solid #333;border-radius:8px;padding:10px;margin-bottom:8px;">
-        <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:4px;">TRAMOS</div>
-        ${STATE.tramos.filter(t=>t.cierre&&t.cierre.apto==='SI').map(t=>`<div style="font-size:12px;color:#000;">✅ ${t.tramo} — ${t.cierre.ml} ML</div>`).join('')||''}
+      
+      <!-- TRAMOS -->
+      <div style="background:#fafafa;border:1px solid #f97316;border-radius:8px;padding:12px;margin-bottom:8px;">
+        <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:6px;text-transform:uppercase;">Tramos Aptos CCTV</div>
+        ${STATE.tramos.filter(t=>t.cierre&&t.cierre.apto==='SI').map(t=>`<div style="font-size:12px;color:#000;">✅ ${t.tramo} — ${t.cierre.ml} ML</div>`).join('')||'<div style="font-size:12px;color:#000;">Sin tramos</div>'}
         ${STATE.cierre.tramosManuales?`<div style="font-size:12px;color:#000;">📝 ${STATE.cierre.tramosManuales} (manual) — ${STATE.cierre.mlManual} ML</div>`:''}
-        ${!STATE.tramos.length&&!STATE.cierre.tramosManuales?'<div style="font-size:12px;color:#000;">Sin tramos</div>':''}
       </div>
-      <div style="background:#fff;border:1px solid #333;border-radius:8px;padding:10px;margin-bottom:8px;">
-        <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:4px;">ACTIVIDADES</div>
+      
+      <!-- ACTIVIDADES -->
+      <div style="background:#fafafa;border:1px solid #f97316;border-radius:8px;padding:12px;margin-bottom:8px;">
+        <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:6px;text-transform:uppercase;">Actividades</div>
         <div style="font-size:12px;color:#000;">Desobstrucción: ${STATE.cierre.desob||'—'}<br>Carga de agua: ${(STATE.m3Total||0)+STATE.cierre.m3} m³</div>
       </div>
-      <div style="background:#fff;border:1px solid #333;border-radius:8px;padding:10px;margin-bottom:8px;">
-        <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:4px;">MÉTRICAS</div>
-        <div style="font-size:12px;color:#000;">ML: ${mlTotal}<br>Horas por justificar: ${horasNoJust} h</div>
+      
+      <!-- MÉTRICAS -->
+      <div style="background:#fafafa;border:1px solid #f97316;border-radius:8px;padding:12px;margin-bottom:8px;">
+        <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:6px;text-transform:uppercase;">Métricas</div>
+        <div style="font-size:12px;color:#000;">ML total: ${mlTotal} ML<br>Meta: 250 ML</div>
       </div>
-      <div style="background:#fff;border:1px solid #333;border-radius:8px;padding:10px;margin-bottom:8px;">
-        <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:4px;">OBSERVACIONES</div>
-        <div style="font-size:12px;color:#000;">${STATE.cierre.obs||'Sin observaciones'}</div>
+      
+      <!-- OBSERVACIONES CON 2 SUBCONJUNTOS -->
+      <div style="background:#fafafa;border:1px solid #f97316;border-radius:8px;padding:12px;margin-bottom:8px;">
+        <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:6px;text-transform:uppercase;">Observaciones</div>
+        <div style="background:#fff8f0;border:2px solid #f59e0b;border-radius:8px;padding:10px;margin-bottom:10px;text-align:center;font-weight:700;color:#f59e0b;">${diagnostico}</div>
+        <div style="border-top:1px dashed #f97316;margin:10px 0;"></div>
+        <div style="font-size:12px;color:#000;min-height:60px;">${STATE.cierre.obs||'Sin observaciones'}</div>
+      </div>
+      
+      <!-- SEPARADOR -->
+      <div style="border-top:2px solid #1a1a2e;margin:10px 0;"></div>
+      
+      <!-- BITÁCORA DETALLADA -->
+      <div style="background:#fff;border:1px solid #333;border-radius:8px;padding:12px;">
+        <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:6px;text-transform:uppercase;">📋 Bitácora Detallada del Día</div>
+        <pre style="font-size:11px;color:#000;white-space:pre-wrap;font-family:monospace;margin:0;">${STATE.bitacoraInterna||'Sin registros'}</pre>
+      </div>
+      
+      <!-- FIRMA -->
+      <div style="display:flex;justify-content:space-between;font-size:10px;margin-top:15px;color:#000;">
+        <div>Firma: ______________________</div>
+        <div>Fecha: ${fecha}</div>
       </div>
     </div>
   `;
+  
   const iframe=document.createElement('iframe');
   iframe.style.position='fixed';iframe.style.right='0';iframe.style.bottom='0';
   iframe.style.width='0';iframe.style.height='0';iframe.style.border='0';
