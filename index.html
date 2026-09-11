@@ -4,8 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>#_Mtto_Preventivo</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#f97316">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="icon.png">
+  
   <style>
-    /* ==================== VARIABLES Y ESTILOS BASE ==================== */
     :root{
       --bg:#0d0f14; --card:#191c24; --card2:#212531; --line:#2d3340;
       --text:#f0f1f5; --sub:#9aa0ad; --accent:#f97316; --good:#22c55e;
@@ -13,19 +17,11 @@
     }
     *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
     body{margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; padding-bottom:40px;}
-    
-    /* ==================== PANTALLAS ==================== */
     .screen{display:none; padding:16px; max-width:480px; margin:0 auto; min-height:100vh;}
     .screen.active{display:block;}
-    
-    /* ==================== TIPOGRAFÍA ==================== */
     h1{font-size:20px; margin:0 0 4px;}
     h2{font-size:14px; color:var(--sub); margin:0 0 20px; font-weight:500;}
-    
-    /* ==================== TARJETAS ==================== */
     .card{background:var(--card); border-radius:var(--radius); padding:16px; margin-bottom:14px; border:1px solid var(--line);}
-    
-    /* ==================== FORMULARIOS ==================== */
     label{display:block; font-size:14px; color:var(--sub); margin:16px 0 8px; font-weight:600;}
     label:first-child{margin-top:0;}
     input[type=text], input[type=number], input[type=time], select, textarea{
@@ -34,26 +30,18 @@
     }
     input:focus, select:focus, textarea:focus{outline:none; border-color:var(--accent);}
     .hint{font-size:12px; color:var(--sub); margin-top:4px;}
-    
-    /* ==================== BOTONES ==================== */
     .btn{width:100%; padding:18px; border-radius:12px; font-size:18px; font-weight:700; background:var(--accent); color:#fff; margin-top:20px; border:none; cursor:pointer; font-family:inherit;}
     .btn:disabled{opacity:.35; cursor:not-allowed;}
     .btn.secondary{background:var(--card2); color:var(--text); border:1px solid var(--line);}
     .btn.small{padding:10px 14px; font-size:14px; margin-top:8px;}
-    
-    /* ==================== TOGGLES Y CHIPS ==================== */
     .toggle2{display:flex; gap:10px; margin-top:6px;}
     .toggle2 button{flex:1; padding:16px; border-radius:12px; background:var(--card2); color:var(--text); border:1px solid var(--line); font-size:16px; font-weight:600; cursor:pointer;}
     .toggle2 button.sel{background:var(--accent); border-color:var(--accent); color:#fff;}
     .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;}
     .chip{padding:10px 14px; border-radius:20px; background:var(--card2); border:1px solid var(--line); color:var(--text); font-size:14px; font-weight:500; cursor:pointer;}
     .chip.active{background:var(--accent); border-color:var(--accent); color:#fff;}
-    
-    /* ==================== SECCIONES ==================== */
     .section-label{font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--sub); margin:20px 0 10px;}
     .grid-actions{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
-    
-    /* ==================== DASHBOARD ==================== */
     .top-icons{display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;}
     .icon-btn{background:none; border:none; font-size:24px; cursor:pointer; padding:4px; opacity:0.7;}
     .info-discreta{text-align:right; font-size:12px; color:var(--sub);}
@@ -61,24 +49,17 @@
     @keyframes pulse-glow{0%,100%{box-shadow:0 0 10px rgba(249,115,22,0.3);}50%{box-shadow:0 0 25px rgba(249,115,22,0.7);}}
     .action-btn{padding:16px 10px;border-radius:12px;background:var(--card2);border:1px solid var(--line);color:var(--text);font-size:14px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;min-height:70px;}
     .action-btn .ic{font-size:24px;}
-    .action-btn:disabled{opacity:.3;cursor:not-allowed;}
     .tramo-open{background:var(--card2);border:1px solid var(--accent);border-radius:12px;padding:14px;margin-bottom:10px;}
     .close-tramo-btn{margin-top:12px;background:var(--bad);color:#fff;padding:12px;border-radius:10px;width:100%;font-weight:600;cursor:pointer;border:none;font-size:15px;}
-    
-    /* ==================== MODALES ==================== */
     .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;align-items:flex-end;}
     .overlay.active{display:flex;}
     .modal{background:var(--card);width:100%;max-width:480px;margin:0 auto;border-radius:18px 18px 0 0;padding:20px 16px 26px;max-height:88vh;overflow-y:auto;}
     .modal h3{margin:0 0 14px;font-size:18px;}
     .modal-close{float:right;background:none;color:var(--sub);font-size:24px;padding:0 4px;cursor:pointer;border:none;}
-    
-    /* ==================== RESUMEN ==================== */
     .summary-line{display:flex;justify-content:space-between;font-size:15px;padding:8px 0;border-bottom:1px solid var(--line);}
     .legend-box{padding:14px;border-radius:10px;font-weight:600;font-size:14px;text-align:center;margin-top:10px;}
     .legend-good{background:#123322;color:var(--good);}
-    .justificar-box{padding:14px;border-radius:10px;font-weight:700;font-size:15px;text-align:center;margin-top:10px;background:#3a2410;color:var(--warn);border:2px solid var(--warn);animation:pulse-glow 1.5s ease-in-out infinite;}
-    
-    /* ==================== UTILIDADES ==================== */
+    .obs-diagnostico{padding:14px;border-radius:10px;font-weight:700;font-size:15px;text-align:center;margin-bottom:12px;background:#3a2410;color:var(--warn);border:2px solid var(--warn);}
     .toast{position:fixed;bottom:16px;left:16px;right:16px;max-width:448px;margin:0 auto;background:var(--card2);border:1px solid var(--accent);padding:12px 14px;border-radius:10px;font-size:13px;display:none;z-index:60;}
     .toast.show{display:block;}
     .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:8px;background:var(--accent);color:#fff;margin-left:6px;}
@@ -86,8 +67,6 @@
     .tramo-sin-cerrar{color:var(--bad);font-weight:700;}
     .clipboard-box{background:var(--card2);padding:12px;border-radius:8px;white-space:pre-wrap;font-family:monospace;font-size:13px;max-height:300px;overflow-y:auto;border:1px solid var(--line);}
     .offline-indicator{display:none;background:var(--bad);color:#fff;text-align:center;font-size:12px;padding:4px;border-radius:6px;margin-bottom:10px;}
-    
-    /* ==================== CIERRE DE TRAMO ==================== */
     .btn-si-apto{position:relative;overflow:hidden;transition:all 0.3s;padding:16px;border-radius:12px;background:var(--card2);border:1px solid var(--line);color:var(--text);font-size:16px;font-weight:600;cursor:pointer;text-align:left;width:100%;}
     .btn-si-apto.activo{background:var(--accent);border-color:var(--accent);color:#fff;}
     .btn-si-apto input{display:none;width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid #fff;background:rgba(255,255,255,0.9);color:#000;font-size:16px;}
@@ -96,16 +75,13 @@
     .btn-no-apto.activo{background:var(--bad);border-color:var(--bad);color:#fff;}
     .btn-no-apto input{display:none;width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid #fff;background:rgba(255,255,255,0.9);color:#000;font-size:16px;}
     .btn-no-apto.activo input{display:block;}
-    
-    /* ==================== ADVERTENCIA INSPECTOR ==================== */
     .advertencia{background:var(--bad);color:#fff;padding:12px;border-radius:8px;font-weight:700;text-align:center;margin-top:8px;display:none;}
     .advertencia.show{display:block;}
-    
-    /* ==================== CAJA OBSERVACIONES CON SUBCONJUNTOS ==================== */
     .obs-box{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:14px;border:1px solid var(--line);}
-    .obs-diagnostico{padding:14px;border-radius:10px;font-weight:700;font-size:15px;text-align:center;margin-bottom:12px;background:#3a2410;color:var(--warn);border:2px solid var(--warn);}
     .obs-separador{border-top:1px dashed var(--line);margin:12px 0;}
     .obs-texto{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px;color:var(--text);font-size:15px;min-height:80px;width:100%;font-family:inherit;}
+    .error-msg{color:var(--bad); font-size:12px; margin-top:4px; display:none;}
+    .error-msg.show{display:block;}
   </style>
 </head>
 <body>
@@ -116,15 +92,7 @@
   <div class="card">
     <label>Placa</label>
     <select id="ap-placa">
-      <option value="">Selecciona placa...</option>
-      <option value="KPN 603|Vactor">KPN 603 — Vactor</option>
-      <option value="LPK 666|Vactor">LPK 666 — Vactor</option>
-      <option value="WOW 047|Vactor">WOW 047 — Vactor</option>
-      <option value="GFP 750|Vactor">GFP 750 — Vactor</option>
-      <option value="GKV 830|Succión">GKV 830 — Succión</option>
-      <option value="JLO 019|Succión">JLO 019 — Succión</option>
-      <option value="LPL301|Ingemac">LPL301 — Ingemac</option>
-      <option value="KPN 602|Ingemac">KPN 602 — Ingemac</option>
+      <option value="">Cargando placas...</option>
     </select>
 
     <label>Barrio <span class="badge" id="gps-status">GPS...</span></label>
@@ -135,7 +103,7 @@
   </div>
 </div>
 
-<!-- ==================== PANTALLA 2: DASHBOARD (OPERADOR) ==================== -->
+<!-- ==================== PANTALLA 2: DASHBOARD ==================== -->
 <div class="screen" id="screen-dashboard">
   <div class="top-icons">
     <button class="icon-btn" onclick="verBitacoraCompleta()">📋</button>
@@ -147,21 +115,18 @@
 
   <div id="tramo-abierto-box"></div>
 
-  <!-- Tramo (operador: 1 tramo, máx 6 dígitos) -->
-  <div class="section-label">Tramo</div>
+  <div class="section-label">Tramo (máx 6 dígitos)</div>
   <div class="grid-actions" id="box-sin-tramo">
-    <input type="text" id="nuevo-tramo-nombre" class="tramo-input-highlight" placeholder="Máx 6 números" maxlength="6" inputmode="numeric" style="grid-column:1/3;">
+    <input type="text" id="nuevo-tramo-nombre" class="tramo-input-highlight" placeholder="Ej: 123456" maxlength="6" inputmode="numeric" style="grid-column:1/3;">
     <button class="btn" id="btn-abrir-tramo" style="grid-column:1/3;" disabled onclick="abrirTramo()">Abrir tramo</button>
   </div>
 
-  <!-- Otras actividades -->
   <div class="section-label">Otras actividades</div>
   <div class="grid-actions">
     <button class="action-btn" onclick="abrirModal('modal-desob')" id="act-desob" disabled><span class="ic">❗</span>Desobstrucción</button>
-    <button class="action-btn" onclick="abrirModal('modal-m3')"><span class="ic">💧</span>Carga de agua</button>
+    <button class="action-btn" onclick="abrirModal('modal-m3')"><span class="ic">💧</span>Carga agua</button>
   </div>
 
-  <!-- Novedad (un solo botón) -->
   <div class="section-label">Novedad</div>
   <div class="grid-actions">
     <button class="action-btn" onclick="abrirModal('modal-novedad')" style="grid-column:1/3;"><span class="ic">⚠️</span>Novedad</button>
@@ -175,7 +140,6 @@
   <h1>Modo Inspector</h1>
   <h2 id="inspector-id">KPN603|8/9/2026|D|ML</h2>
   
-  <!-- Hora de inicio y horas totales (solo inspector) -->
   <div class="card">
     <label>Hora de inicio</label>
     <input type="time" id="insp-hora-inicio" value="">
@@ -183,12 +147,11 @@
     <input type="number" id="insp-horas-totales" min="0" max="12" step="0.5" placeholder="7">
   </div>
   
-  <!-- Tramos varios (inspector) + ML total (máx 80) -->
   <div class="card">
     <label>Tramos (separados por coma)</label>
     <input type="text" id="insp-tramos" placeholder="123, 456, 789">
-    <label>ML total (máx 80)</label>
-    <input type="number" id="insp-ml" min="0" max="80" step="1" placeholder="75" oninput="actualizarDiagnosticoInspector()">
+    <label>ML total (sin límite)</label>
+    <input type="number" id="insp-ml" min="0" step="1" placeholder="75" oninput="actualizarDiagnosticoInspector()">
   </div>
   
   <div class="card">
@@ -201,29 +164,6 @@
     <input type="number" id="insp-m3" min="0" step="0.1" placeholder="0">
   </div>
   
-  <!-- Novedades (mismas que operador) -->
-  <div class="card">
-    <label>Novedad (si aplica)</label>
-    <div class="chips">
-      <button class="chip" onclick="seleccionarNovedadInspector(this,'Avería')">🔧 Avería</button>
-      <button class="chip" onclick="seleccionarNovedadInspector(this,'Lodos')">🗑️ Lodos</button>
-      <button class="chip" onclick="seleccionarNovedadInspector(this,'Fuerza mayor')">🌧️ F. mayor</button>
-      <button class="chip" onclick="seleccionarNovedadInspector(this,'Factor humano')">👤 F. humano</button>
-    </div>
-    <div id="insp-novedad-sub" style="display:none;">
-      <label>Causa/Motivo</label>
-      <div class="chips" id="insp-novedad-causas"></div>
-    </div>
-    <div id="insp-novedad-regresa" style="display:none;">
-      <label>¿Regresa?</label>
-      <div class="toggle2">
-        <button id="insp-nov-si" onclick="seleccionarRegresaInspector('SI')">Sí</button>
-        <button id="insp-nov-no" onclick="seleccionarRegresaInspector('NO')">No</button>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Diagnóstico junto a observaciones -->
   <div id="insp-diagnostico"></div>
   
   <div class="card">
@@ -234,7 +174,7 @@
   <button class="btn" onclick="guardarInspector()">Guardar y salir</button>
 </div>
 
-<!-- ==================== PANTALLA 4: CIERRE (RESUMEN) ==================== -->
+<!-- ==================== PANTALLA 4: CIERRE ==================== -->
 <div class="screen" id="screen-cierre">
   <h1>Cierre de jornada</h1>
   <h2>Resumen final</h2>
@@ -242,15 +182,15 @@
     <div class="summary-line"><span>Placa</span><strong id="rs-placa"></strong></div>
     <div class="summary-line"><span>Contratista</span><strong id="rs-contratista"></strong></div>
     <div class="summary-line"><span>Barrio</span><strong id="rs-barrio"></strong></div>
+    <div class="summary-line"><span>Inspector</span><strong id="rs-inspector"></strong></div>
   </div>
   <div class="card" id="rs-tramos"></div>
   <div class="card">
     <div class="summary-line"><span>ML total</span><strong id="rs-ml"></strong></div>
     <div class="summary-line"><span>Desobstrucción</span><strong id="rs-desob"></strong></div>
-    <div class="summary-line"><span>Carga de agua</span><strong id="rs-m3"></strong></div>
+    <div class="summary-line"><span>Carga agua</span><strong id="rs-m3"></strong></div>
   </div>
   
-  <!-- CAJA OBSERVACIONES CON 2 SUBCONJUNTOS -->
   <div class="obs-box">
     <label style="margin-top:0;">Observaciones</label>
     <div id="rs-justificar" style="margin-bottom:12px;"></div>
@@ -258,7 +198,7 @@
     <textarea id="cierre-obs" rows="4" placeholder="Justifique qué actividades se realizaron" class="obs-texto"></textarea>
   </div>
   
-  <button class="btn secondary" onclick="volverFormulario()">Volver</button>
+  <button class="btn secondary" onclick="volverDashboard()">Volver</button>
   <button class="btn" onclick="confirmarYExportar()">🖨️ Imprimir PDF y Cerrar</button>
 </div>
 
@@ -325,7 +265,8 @@
     <button class="modal-close" onclick="cerrarModal('modal-cierre-tramo')">✕</button>
     <h3>Cerrar tramo</h3>
     <label>¿Apto para CCTV?</label>
-    <button class="btn-si-apto" id="btn-si-apto" onclick="activarBotonSI()">✅ SÍ<input type="number" id="ct-ml" min="0" max="80" placeholder="ML (máx 80)"></button>
+    <button class="btn-si-apto" id="btn-si-apto" onclick="activarBotonSI()">✅ SÍ<input type="number" id="ct-ml" min="0" max="130" placeholder="ML (máx 130)"></button>
+    <div class="error-msg" id="ct-ml-error">⚠️ El ML debe estar entre 1 y 130</div>
     <button class="btn-no-apto" id="btn-no-apto" onclick="activarBotonNO()" style="margin-top:10px;">❌ NO<input type="text" id="ct-obs" placeholder="Observación"></button>
     <button class="btn" id="btn-confirmar-cierre-tramo" disabled onclick="confirmarCierreTramo()">Confirmar</button>
   </div>
@@ -344,27 +285,27 @@
   <div class="modal">
     <button class="modal-close" onclick="cerrarModal('modal-formulario')">✕</button>
     <h3>Ingreso manual</h3>
-    
-    <label>1. Tramos (separados por coma)</label>
-    <input type="text" id="form-tramos" placeholder="123, 456, 789">
-    
-    <label>2. ML total (máx 80)</label>
-    <input type="number" id="form-ml" min="0" max="80" step="1" placeholder="75">
-    
-    <label>3. Desobstrucción</label>
+    <div id="form-tramos-section" style="display:none;">
+      <label>Tramos (separados por coma)</label>
+      <input type="text" id="form-tramos" placeholder="123, 456, 789">
+      <label>ML total (máx 130)</label>
+      <input type="number" id="form-ml" min="0" max="130" step="1" placeholder="75">
+      <div class="error-msg" id="form-ml-error">⚠️ El ML debe estar entre 0 y 130</div>
+    </div>
+    <label>Desobstrucción</label>
     <input type="text" id="form-desob" placeholder="Tramo">
-    
-    <label>4. Carga de agua (M3 total)</label>
+    <label>Carga de agua (M3 total)</label>
     <input type="number" id="form-m3" min="0" step="0.1" placeholder="0">
-    
     <button class="btn" onclick="confirmarFormulario()">Continuar</button>
   </div>
 </div>
 
+<!-- ✅ NUEVO MODAL: SELECCIONAR INSPECTOR -->
 <div class="overlay" id="ov-inspector">
   <div class="modal">
-    <button class="modal-close" onclick="cerrarModal('modal-inspector')">✕</button>
-    <h3>Inspector que cierra</h3>
+    <h3>👤 Seleccionar inspector</h3>
+    <p style="font-size:14px; color:var(--sub); margin-bottom:12px;">Selecciona quién cierra la jornada</p>
+    <label>Inspector</label>
     <select id="form-inspector">
       <option value="">Selecciona...</option>
       <option>Marlon Ledezma</option>
@@ -373,7 +314,7 @@
       <option>Armando Pájaro</option>
       <option>Eider Mina</option>
     </select>
-    <button class="btn" onclick="confirmarInspector()">Confirmar</button>
+    <button class="btn" onclick="confirmarInspector()">Continuar al cierre</button>
   </div>
 </div>
 
@@ -382,14 +323,32 @@
 <script>
 /* ==================== CONFIG ==================== */
 const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfERpt4S-r5oDgoAsGMDFYq-RdhOiFsszFjjPTnA_Utm3ZSVQ/formResponse";
+const PLACAS_CSV_URL = "PEGA_AQUI_TU_URL_CSV";
+
 const META_ML = 250;
 const HORAS_BASE = 7;
 const RANGO_MIN = 220;
 const RANGO_MAX = 280;
+const ML_MAX_TRAMO = 130;  // ✅ LÍMITE GLOBAL
 const SYNC_QUEUE_KEY = "mtto_prev_sync_v1";
 const STATE_KEY = "mtto_prev_state_v1";
+const PLACAS_CACHE_KEY = "mtto_prev_placas_cache_v1";
 
-/* ==================== INSPECTORES ==================== */
+const PLACAS_FALLBACK = [
+  {placa: "KPN 603", contratista: "Vactor"},
+  {placa: "LPK 666", contratista: "Vactor"},
+  {placa: "WOW 047", contratista: "Vactor"},
+  {placa: "GFP 750", contratista: "Vactor"},
+  {placa: "GKV 830", contratista: "Succión"},
+  {placa: "JLO 019", contratista: "Succión"},
+  {placa: "LPL301",  contratista: "Ingemac"},
+  {placa: "KPN 602", contratista: "Ingemac"},
+  {placa: "THQ 592", contratista: "Ingemac"},
+  {placa: "Otras", contratista: "Otras"}
+];
+
+let PLACAS = [...PLACAS_FALLBACK];
+
 const INSPECTORES = {
   'ML': 'Marlon Ledezma',
   'LD': 'Luis Díaz',
@@ -398,7 +357,6 @@ const INSPECTORES = {
   'EM': 'Eider Mina'
 };
 
-/* ==================== ESTADO ==================== */
 let STATE = {
   placa:null, contratista:null, barrio:null, modo:null, gps:null,
   horaInicio:null, horaFin:null, inspector:null,
@@ -407,16 +365,90 @@ let STATE = {
   cierre:{desob:'', m3:0, obs:'', tramosManuales:'', mlManual:0}
 };
 
-/* ==================== VARIABLES TEMPORALES ==================== */
 let tempApto=null, tramoACerrar=null, tempTipoNovedad=null, tempCausa=null, tempRegresa=null;
 let formularioConTramos=false;
-let novedadInspectorActual=null, causaInspectorActual=null, regresaInspectorActual=null;
 
-/* ==================== UTILIDADES ==================== */
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
 function capitalizar(s){if(!s)return s;return s.charAt(0).toUpperCase()+s.slice(1).toLowerCase();}
 function nowISO(){return new Date().toISOString();}
 function fmtHora(iso){const d=new Date(iso);return d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',hour12:true});}
+
+/* ==================== CARGAR PLACAS ==================== */
+async function cargarPlacas(){
+  try{
+    const cache = localStorage.getItem(PLACAS_CACHE_KEY);
+    if(cache){
+      const parsed = JSON.parse(cache);
+      if(Array.isArray(parsed) && parsed.length > 0){
+        PLACAS = parsed;
+        renderPlacasSelect();
+      }
+    }
+  }catch(e){}
+  
+  if(!navigator.onLine){
+    if(PLACAS.length === 0) PLACAS = [...PLACAS_FALLBACK];
+    renderPlacasSelect();
+    return;
+  }
+  
+  if(PLACAS_CSV_URL === "PEGA_AQUI_TU_URL_CSV"){
+    renderPlacasSelect();
+    return;
+  }
+  
+  try{
+    const response = await fetch(PLACAS_CSV_URL);
+    const csvText = await response.text();
+    const nuevasPlacas = parsearCSV(csvText);
+    if(nuevasPlacas.length > 0){
+      PLACAS = nuevasPlacas;
+      localStorage.setItem(PLACAS_CACHE_KEY, JSON.stringify(nuevasPlacas));
+      renderPlacasSelect();
+    } else {
+      renderPlacasSelect();
+    }
+  }catch(e){
+    if(PLACAS.length === 0) PLACAS = [...PLACAS_FALLBACK];
+    renderPlacasSelect();
+  }
+}
+
+function parsearCSV(csvText){
+  const lineas = csvText.split('\n').filter(l => l.trim().length > 0);
+  const placas = [];
+  for(let i = 0; i < lineas.length; i++){
+    const columnas = parsearLineaCSV(lineas[i]);
+    if(i === 0){
+      const p = (columnas[0] || '').toLowerCase().trim();
+      if(p === 'placa') continue;
+    }
+    const placa = (columnas[0] || '').trim();
+    const contratista = (columnas[1] || '').trim();
+    if(placa && contratista) placas.push({placa, contratista});
+  }
+  return placas;
+}
+
+function parsearLineaCSV(linea){
+  const r = []; let a = ''; let c = false;
+  for(let i = 0; i < linea.length; i++){
+    const ch = linea[i];
+    if(ch === '"') c = !c;
+    else if(ch === ',' && !c){ r.push(a); a = ''; }
+    else a += ch;
+  }
+  r.push(a);
+  return r;
+}
+
+function renderPlacasSelect(){
+  const select = document.getElementById('ap-placa');
+  const valorActual = select.value;
+  select.innerHTML = '<option value="">Selecciona placa...</option>' + 
+    PLACAS.map(p => `<option value="${p.placa}|${p.contratista}">${p.placa} — ${p.contratista}</option>`).join('');
+  if(valorActual) select.value = valorActual;
+}
 
 /* ==================== GPS ==================== */
 function getGPS(){
@@ -439,84 +471,112 @@ async function reverseGeocode(gps){
   }catch(e){return"";}
 }
 
-/* ==================== PREFILL BARRIO EN CARGA DE AGUA ==================== */
-async function prefillM3Barrio(){
-  const gps = await getGPS();
-  const barrio = await reverseGeocode(gps);
-  if(barrio) document.getElementById('m3-barrio').value = barrio;
+async function getDireccion(gps){
+  if(!gps) return "";
+  try{
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${gps.lat}&lon=${gps.lng}&format=json&addressdetails=1&accept-language=es`);
+    const d = await r.json();
+    const a = d.address || {};
+    const road = a.road || a.pedestrian || a.footway || a.path || "";
+    const num = a.house_number || "";
+    if(!road) return "";
+    let roadAbbr = road
+      .replace(/^Calle\s+/i, "Cll ")
+      .replace(/^Carrera\s+/i, "Cra ")
+      .replace(/^Avenida\s+/i, "Av ")
+      .replace(/^Avenida Calle\s+/i, "Av Cll ")
+      .replace(/^Avenida Carrera\s+/i, "Av Cra ")
+      .replace(/^Diagonal\s+/i, "Diag ")
+      .replace(/^Transversal\s+/i, "Trans ")
+      .replace(/^Circular\s+/i, "Circ ");
+    if(num) return `${roadAbbr} # ${num}`;
+    return roadAbbr;
+  }catch(e){ return ""; }
 }
 
-/* ==================== DETECCIÓN DE INSPECTOR ==================== */
 function detectarInspector(texto){
   const match = texto.match(/^(\d{1,2}\/\d{1,2}\/\d{4})\s+([DN])\s+([A-Z]{2})$/);
   if(match){
     const fecha = match[1];
     const jornada = match[2] === 'D' ? 'Diurno' : 'Nocturno';
     const iniciales = match[3];
-    if(INSPECTORES[iniciales]){
-      return {fecha, jornada, iniciales, nombre: INSPECTORES[iniciales]};
-    }
+    if(INSPECTORES[iniciales]){return {fecha, jornada, iniciales, nombre: INSPECTORES[iniciales]};}
   }
   return null;
 }
 
-/* ==================== PERSISTENCIA DE ESTADO ==================== */
-function guardarEstado(){
-  try{localStorage.setItem(STATE_KEY,JSON.stringify(STATE));}catch(e){}
-}
-
+function guardarEstado(){try{localStorage.setItem(STATE_KEY,JSON.stringify(STATE));}catch(e){}}
 function cargarEstado(){
   try{
     const data=localStorage.getItem(STATE_KEY);
-    if(data){
-      const saved=JSON.parse(data);
-      if(!saved.cerrada)STATE=saved;
-    }
+    if(data){const saved=JSON.parse(data); if(!saved.cerrada)STATE=saved;}
   }catch(e){}
 }
 
-/* ==================== COLA DE SINCRONIZACIÓN OFFLINE ==================== */
 function cargarCola(){try{return JSON.parse(localStorage.getItem(SYNC_QUEUE_KEY)||'[]');}catch(e){return[];}}
 function guardarCola(c){try{localStorage.setItem(SYNC_QUEUE_KEY,JSON.stringify(c));}catch(e){}}
-function encolarPayload(p){const c=cargarCola();c.push(p);guardarCola(c);actualizarEstadoSync();}
-function actualizarEstadoSync(){
-  const el=document.getElementById('sync-status');
-  if(!el)return;
-  const c=cargarCola();
-  if(c.length===0){el.textContent='● Listo';el.style.color='var(--good)';}
-  else{el.textContent=`● ${c.length} pendiente(s)`;el.style.color='var(--warn)';}
-}
-async function procesarCola(){
-  const c=cargarCola();
-  if(!c.length)return;
-  const rest=[];
-  for(const p of c){
-    try{await enviarPayload(p);}catch(e){rest.push(p);}
-  }
-  guardarCola(rest);
+
+function encolarHito(payload){
+  const cola = cargarCola();
+  cola.push(payload);
+  guardarCola(cola);
   actualizarEstadoSync();
 }
-async function enviarPayload(p){
-  const fd=new URLSearchParams();
-  fd.append('entry.698566237',p.tipo||'');
-  fd.append('entry.759456156',JSON.stringify(p.datos||{}));
-  fd.append('entry.1958505050',p.placa||'');
-  fd.append('entry.1438075125',p.contratista||'');
-  fd.append('entry.1542290425',p.barrio||'');
-  fd.append('entry.1617359207',p.inspector||'');
-  await fetch(FORM_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:fd.toString()});
-  return{ok:true};
+
+function actualizarEstadoSync(){
+  const el = document.getElementById('sync-status');
+  if(!el) return;
+  const cola = cargarCola();
+  if(cola.length === 0){ el.textContent = '● Listo'; el.style.color = 'var(--good)'; }
+  else { el.textContent = `● ${cola.length} pendiente(s)`; el.style.color = 'var(--warn)'; }
+}
+
+async function enviarPayload(payload){
+  const formData = new URLSearchParams();
+  formData.append('entry.698566237', payload.tipo || '');
+  formData.append('entry.759456156', JSON.stringify(payload.datos || {}));
+  formData.append('entry.1958505050', payload.placa || '');
+  formData.append('entry.1438075125', payload.contratista || '');
+  formData.append('entry.1542290425', payload.barrio || '');
+  formData.append('entry.1617359207', payload.inspector || '');
+  await fetch(FORM_URL,{method:'POST', mode:'no-cors', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: formData.toString()});
+  return {ok:true};
+}
+
+async function enviarHitoRemoto(tipo, datos){
+  const payload = {tipo, datos, placa: STATE.placa, contratista: STATE.contratista, barrio: STATE.barrio, inspector: STATE.inspector || ''};
+  if(!navigator.onLine){ encolarHito(payload); return; }
+  try{
+    await enviarPayload(payload);
+    actualizarEstadoSync();
+    procesarCola();
+  }catch(e){
+    encolarHito(payload);
+  }
+}
+
+async function procesarCola(){
+  let cola = cargarCola();
+  if(cola.length === 0) return;
+  const restante = [];
+  for(const item of cola){
+    try{ await enviarPayload(item); }catch(e){ restante.push(item); }
+  }
+  guardarCola(restante);
+  actualizarEstadoSync();
 }
 
 /* ==================== APERTURA ==================== */
 function validarApertura(){
-  const ok=document.getElementById('ap-placa').value&&document.getElementById('ap-barrio').value.trim();
-  document.getElementById('btn-abrir-jornada').disabled=!ok;
+  const placa = document.getElementById('ap-placa').value;
+  const barrio = document.getElementById('ap-barrio').value.trim();
+  document.getElementById('btn-abrir-jornada').disabled = !(placa && barrio);
 }
 
 document.getElementById('ap-placa').addEventListener('change',e=>{
   const val=e.target.value;
-  if(val){const p=val.split('|');STATE.placa=p[0];STATE.contratista=p[1];}else{STATE.placa=null;STATE.contratista=null;}
+  if(val){const p=val.split('|');STATE.placa=p[0];STATE.contratista=p[1];}
+  else{STATE.placa=null;STATE.contratista=null;}
   validarApertura();
 });
 
@@ -555,20 +615,21 @@ document.getElementById('btn-abrir-jornada').onclick=function(){
     STATE.modo='operador';
     STATE.barrio=capitalizar(barrioValor);
     STATE.horaInicio=nowISO();
+    guardarEstado();
     document.getElementById('screen-apertura').classList.remove('active');
     document.getElementById('screen-dashboard').classList.add('active');
     renderDashboard();
+    enviarHitoRemoto('jornadaInicio', {});
   }
 };
 
-/* ==================== GPS APERTURA ==================== */
 async function initGPSApertura(){
   document.getElementById('gps-status').textContent="GPS...";
   const gps=await getGPS();
   STATE.gps=gps;
   const barrio=await reverseGeocode(gps);
   const val=document.getElementById('ap-barrio').value;
-  if(barrio&&!detectarInspector(val)){
+  if(barrio && !detectarInspector(val)){
     document.getElementById('ap-barrio').value=barrio;
     STATE.barrio=barrio;
     document.getElementById('gps-status').textContent="✓ auto";
@@ -578,28 +639,28 @@ async function initGPSApertura(){
   validarApertura();
 }
 
-// Inicializar GPS cuando el DOM esté listo
 window.addEventListener('load',()=>{
+  cargarPlacas();
   initGPSApertura();
   cargarEstado();
-  if(STATE.horaInicio&&!STATE.cerrada){
+  if(STATE.horaInicio && !STATE.cerrada){
     document.getElementById('screen-apertura').classList.remove('active');
     if(STATE.modo==='inspector'){
       document.getElementById('screen-inspector').classList.add('active');
-    }else{
+    } else {
       document.getElementById('screen-dashboard').classList.add('active');
       renderDashboard();
     }
   }
   actualizarEstadoSync();
-  if(navigator.onLine)procesarCola();
+  if(navigator.onLine) procesarCola();
 });
 
-/* ==================== DASHBOARD RENDER ==================== */
+/* ==================== DASHBOARD ==================== */
 function renderDashboard(){
   const box=document.getElementById('tramo-abierto-box');
   const sin=document.getElementById('box-sin-tramo');
-  const activo=STATE.tramos.find(t=>t.id===STATE.tramoActivoId&&!t.cierre);
+  const activo=STATE.tramos.find(t=>!t.cierre);
   const totalML=calcularMLTotal();
   document.getElementById('info-tramos-ml').textContent=`${STATE.tramos.length} tramos · ${totalML} ML`;
   if(activo){
@@ -612,7 +673,6 @@ function renderDashboard(){
   }
 }
 
-/* ==================== CÁLCULOS ==================== */
 function calcularMLTotal(){
   return STATE.tramos.filter(t=>t.cierre&&t.cierre.apto==="SI").reduce((s,t)=>s+(Number(t.cierre.ml)||0),0);
 }
@@ -635,8 +695,9 @@ function registrarHito(bloqueTexto){
   const enc=generarEncabezado();
   const bloque=bloqueTexto.replace('[Actividad del dia #; X]',`[Actividad del dia #; ${STATE.actividadCount}]`);
   const completo=enc+'\n'+bloque;
-  if(!STATE.bitacoraInterna)STATE.bitacoraInterna=completo;else STATE.bitacoraInterna+='\n\n'+completo;
-  copiarAlPortapapeles(completo);
+  if(!STATE.bitacoraInterna) STATE.bitacoraInterna=completo;
+  else STATE.bitacoraInterna+='\n\n'+completo;
+  guardarEstado();
 }
 
 function copiarAlPortapapeles(texto){
@@ -645,7 +706,7 @@ function copiarAlPortapapeles(texto){
 }
 function fallbackCopy(texto){
   const ta=document.createElement('textarea');ta.value=texto;document.body.appendChild(ta);ta.select();
-  try{document.execCommand('copy');toast("✅ Copiado");}catch(e){toast("❌ Error");}
+  try{document.execCommand('copy');}catch(e){}
   document.body.removeChild(ta);
 }
 
@@ -658,67 +719,130 @@ document.getElementById('nuevo-tramo-nombre').addEventListener('input',e=>{
 async function abrirTramo(){
   const nombre=document.getElementById('nuevo-tramo-nombre').value.trim();
   const gps=await getGPS();
+  const dir=gps?await getDireccion(gps):'';
   const id='t'+Date.now();
-  STATE.tramos.push({id,tramo:nombre,horaInicio:nowISO(),gps,cierre:null,eventos:[]});
-  STATE.tramoActivoId=id;
+  STATE.tramos.push({id, tramo:nombre, horaInicio:nowISO(), gps, dir, cierre:null});
+  guardarEstado();
   const gpsText=gps?`${gps.lat},${gps.lng}`:'sin GPS';
-  registrarHito(`Apertura de tramo\n[Tramo: ${nombre}]\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Actividad del dia #; X]`);
+  registrarHito(`Apertura de tramo\n[Tramo: ${nombre}]\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Dir: ${dir}]\n[Actividad del dia #; X]`);
+  enviarHitoRemoto('tramoInicio', {tramo:nombre, lat: gps?gps.lat:'', lng: gps?gps.lng:'', direccion: dir});
   document.getElementById('nuevo-tramo-nombre').value="";
   document.getElementById('btn-abrir-tramo').disabled=true;
   renderDashboard();
 }
 
-/* ==================== CIERRE DE TRAMO ==================== */
 function abrirModalCierreTramo(id){
   tramoACerrar=id;tempApto=null;
   document.getElementById('btn-si-apto').classList.remove('activo');
   document.getElementById('btn-no-apto').classList.remove('activo');
   document.getElementById('ct-ml').value='';document.getElementById('ct-obs').value='';
+  document.getElementById('ct-ml-error').classList.remove('show');
   document.getElementById('btn-confirmar-cierre-tramo').disabled=true;
   abrirModal('modal-cierre-tramo');
 }
-function activarBotonSI(){tempApto='SI';document.getElementById('btn-si-apto').classList.add('activo');document.getElementById('btn-no-apto').classList.remove('activo');document.getElementById('ct-obs').value='';document.getElementById('ct-ml').focus();validarCierreTramo();}
-function activarBotonNO(){tempApto='NO';document.getElementById('btn-no-apto').classList.add('activo');document.getElementById('btn-si-apto').classList.remove('activo');document.getElementById('ct-ml').value='';document.getElementById('ct-obs').focus();validarCierreTramo();}
-document.getElementById('ct-ml').addEventListener('input',validarCierreTramo);
-document.getElementById('ct-obs').addEventListener('input',validarCierreTramo);
-function validarCierreTramo(){
-  let ok=false;
-  if(tempApto==='SI'){ok=Number(document.getElementById('ct-ml').value)>0;}
-  else if(tempApto==='NO'){ok=document.getElementById('ct-obs').value.trim().length>0;}
-  document.getElementById('btn-confirmar-cierre-tramo').disabled=!ok;
+function activarBotonSI(){
+  tempApto='SI';
+  document.getElementById('btn-si-apto').classList.add('activo');
+  document.getElementById('btn-no-apto').classList.remove('activo');
+  document.getElementById('ct-obs').value='';
+  document.getElementById('ct-ml').focus();
+  validarCierreTramo();
 }
+function activarBotonNO(){
+  tempApto='NO';
+  document.getElementById('btn-no-apto').classList.add('activo');
+  document.getElementById('btn-si-apto').classList.remove('activo');
+  document.getElementById('ct-ml').value='';
+  document.getElementById('ct-obs').focus();
+  validarCierreTramo();
+}
+
+document.getElementById('ct-ml').addEventListener('input', validarCierreTramo);
+document.getElementById('ct-obs').addEventListener('input', validarCierreTramo);
+
+/* ✅ VALIDACIÓN REAL con límite de 130 */
+function validarCierreTramo(){
+  const btn = document.getElementById('btn-confirmar-cierre-tramo');
+  const errEl = document.getElementById('ct-ml-error');
+  let ok=false;
+  
+  if(tempApto==='SI'){
+    const ml = Number(document.getElementById('ct-ml').value);
+    if(ml <= 0 || ml > ML_MAX_TRAMO){
+      errEl.classList.add('show');
+      ok = false;
+    } else {
+      errEl.classList.remove('show');
+      ok = true;
+    }
+  } else if(tempApto==='NO'){
+    errEl.classList.remove('show');
+    ok = document.getElementById('ct-obs').value.trim().length>0;
+  } else {
+    errEl.classList.remove('show');
+    ok = false;
+  }
+  btn.disabled = !ok;
+}
+
 async function confirmarCierreTramo(){
   const tramo=STATE.tramos.find(t=>t.id===tramoACerrar);
   if(!tramo)return;
-  if(tempApto==='SI'){tramo.cierre={apto:'SI',ml:Number(document.getElementById('ct-ml').value),obs:''};}
-  else{tramo.cierre={apto:'NO',ml:0,obs:capitalizar(document.getElementById('ct-obs').value.trim())};}
-  tramo.cerrado=true;tramo.horaFin=nowISO();
-  const gps=await getGPS();const gpsText=gps?`${gps.lat},${gps.lng}`:'sin GPS';
-  registrarHito(`Cierre de tramo\n[Tramo: ${tramo.tramo}]\n[Apto CCTV: ${tramo.cierre.apto}]\n${tramo.cierre.apto==='SI'?`[ML: ${tramo.cierre.ml}]`:`[Observación: ${tramo.cierre.obs}]`}\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Actividad del dia #; X]`);
-  cerrarModal('modal-cierre-tramo');tramoACerrar=null;renderDashboard();
+  
+  // ✅ Doble verificación
+  if(tempApto==='SI'){
+    const ml = Number(document.getElementById('ct-ml').value);
+    if(ml <= 0 || ml > ML_MAX_TRAMO){
+      toast(`⚠️ ML inválido (1 a ${ML_MAX_TRAMO})`);
+      return;
+    }
+    tramo.cierre={apto:'SI', ml, obs:''};
+  } else {
+    tramo.cierre={apto:'NO', ml:0, obs:capitalizar(document.getElementById('ct-obs').value.trim())};
+  }
+  
+  tramo.horaFin=nowISO();
+  guardarEstado();
+  const gps=await getGPS();
+  const dir=gps?await getDireccion(gps):'';
+  const gpsText=gps?`${gps.lat},${gps.lng}`:'sin GPS';
+  registrarHito(`Cierre de tramo\n[Tramo: ${tramo.tramo}]\n[Apto CCTV: ${tramo.cierre.apto}]\n${tramo.cierre.apto==='SI'?`[ML: ${tramo.cierre.ml}]`:`[Observación: ${tramo.cierre.obs}]`}\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Dir: ${dir}]\n[Actividad del dia #; X]`);
+  enviarHitoRemoto('tramoCierre', {tramo: tramo.tramo, aptoCCTV: tramo.cierre.apto, ml: tramo.cierre.ml, observacion: tramo.cierre.obs, direccion: dir});
+  cerrarModal('modal-cierre-tramo');
+  tramoACerrar=null;
+  renderDashboard();
 }
 
 /* ==================== DESOBSTRUCCIÓN ==================== */
 async function registrarDesobstruccion(){
-  const activo=STATE.tramos.find(t=>t.id===STATE.tramoActivoId&&!t.cierre);
-  if(!activo){toast("No hay tramo activo");return;}
-  const tramoTxt=document.getElementById('desob-tramo').value.trim()||activo.tramo;
-  activo.eventos.push({tipo:'Desobstrucción',tramo:tramoTxt,hora:nowISO()});
-  const gps=await getGPS();const gpsText=gps?`${gps.lat},${gps.lng}`:'sin GPS';
-  registrarHito(`Desobstrucción\n[Tramo: ${tramoTxt}]\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Actividad del dia #; X]`);
+  const tramoTxt=document.getElementById('desob-tramo').value.trim() || (STATE.tramos.find(t=>!t.cierre)?.tramo || '');
+  if(!tramoTxt){toast("Ingresa el tramo");return;}
+  const gps=await getGPS();
+  const dir=gps?await getDireccion(gps):'';
+  guardarEstado();
+  const gpsText=gps?`${gps.lat},${gps.lng}`:'sin GPS';
+  registrarHito(`Desobstrucción\n[Tramo: ${tramoTxt}]\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Dir: ${dir}]\n[Actividad del dia #; X]`);
+  enviarHitoRemoto('desob', {tramo: tramoTxt, lat: gps?gps.lat:'', lng: gps?gps.lng:'', direccion: dir});
   document.getElementById('desob-tramo').value="";
-  cerrarModal('modal-desob');renderDashboard();
+  cerrarModal('modal-desob');
+  renderDashboard();
 }
 
-/* ==================== CARGA DE AGUA ==================== */
+/* ==================== CARGA AGUA ==================== */
 async function registrarM3(){
   const valor=Number(document.getElementById('m3-valor').value)||0;
   const barrioM3=capitalizar(document.getElementById('m3-barrio').value.trim())||STATE.barrio;
+  const gps=await getGPS();
+  const dir=gps?await getDireccion(gps):'';
   STATE.m3Total=(STATE.m3Total||0)+valor;
-  const gps=await getGPS();const gpsText=gps?`${gps.lat},${gps.lng}`:'sin GPS';
-  registrarHito(`Carga de agua\n[M3: ${valor}]\n[Barrio: ${barrioM3}]\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Actividad del dia #; X]`);
-  document.getElementById('m3-valor').value="";document.getElementById('m3-barrio').value="";
+  guardarEstado();
+  const gpsText=gps?`${gps.lat},${gps.lng}`:'sin GPS';
+  registrarHito(`Carga de agua\n[M3: ${valor}]\n[Barrio: ${barrioM3}]\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Dir: ${dir}]\n[Actividad del dia #; X]`);
+  enviarHitoRemoto('m3', {valor, barrioM3, lat: gps?gps.lat:'', lng: gps?gps.lng:'', direccion: dir});
+  document.getElementById('m3-valor').value="";
+  document.getElementById('m3-barrio').value="";
   cerrarModal('modal-m3');
+  renderDashboard();
 }
 
 /* ==================== NOVEDAD ==================== */
@@ -751,7 +875,8 @@ function seleccionarTipoNovedad(btn,tipo){
     });
   }
   if(tipo!=='Fuerza mayor'){document.getElementById('btn-registrar-novedad').disabled=true;}
-  document.getElementById('nov-si').classList.remove('sel');document.getElementById('nov-no').classList.remove('sel');
+  document.getElementById('nov-si').classList.remove('sel');
+  document.getElementById('nov-no').classList.remove('sel');
 }
 
 function seleccionarCausa(btn,causa){
@@ -770,76 +895,36 @@ function seleccionarRegresa(val){
 function validarNovedad(){
   const btn=document.getElementById('btn-registrar-novedad');
   if(tempTipoNovedad==='Fuerza mayor'){btn.disabled=false;return;}
-  if(tempTipoNovedad==='Avería'||tempTipoNovedad==='Factor humano'){btn.disabled=!(tempCausa&&tempRegresa);return;}
+  if(tempTipoNovedad==='Avería'||tempTipoNovedad==='Factor humano'){btn.disabled=!(tempCausa && tempRegresa);return;}
   btn.disabled=!tempRegresa;
 }
 
 async function registrarNovedad(){
-  STATE.novedades.push({tipo:tempCausa||tempTipoNovedad,regresa:tempRegresa,hora:nowISO()});
-  const gps=await getGPS();const gpsText=gps?`${gps.lat},${gps.lng}`:'sin GPS';
-  registrarHito(`Novedad\n[Tipo: ${tempCausa||tempTipoNovedad}]\n[Regresa: ${tempRegresa||'N/A'}]\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Actividad del dia #; X]`);
+  STATE.novedades.push({tipo:tempCausa||tempTipoNovedad, regresa:tempRegresa, hora:nowISO()});
+  guardarEstado();
+  const gps=await getGPS();
+  const dir=gps?await getDireccion(gps):'';
+  const gpsText=gps?`${gps.lat},${gps.lng}`:'sin GPS';
+  registrarHito(`Novedad\n[Tipo: ${tempCausa||tempTipoNovedad}]\n[Regresa: ${tempRegresa||'N/A'}]\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Dir: ${dir}]\n[Actividad del dia #; X]`);
+  enviarHitoRemoto('novedad', {causa: tempCausa||tempTipoNovedad, regresa: tempRegresa, lat: gps?gps.lat:'', lng: gps?gps.lng:'', direccion: dir});
   cerrarModal('modal-novedad');
+  resetNovedadTemp();
 }
 
-/* ==================== NOVEDAD INSPECTOR ==================== */
-function seleccionarNovedadInspector(btn,tipo){
-  novedadInspectorActual=tipo;
-  document.querySelectorAll('#screen-inspector .chip').forEach(c=>c.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('insp-novedad-regresa').style.display='none';
-  document.getElementById('insp-novedad-sub').style.display='none';
-  const causasBox=document.getElementById('insp-novedad-causas');
-  causasBox.innerHTML='';
-  if(tipo==='Avería'){
-    document.getElementById('insp-novedad-sub').style.display='block';
-    document.getElementById('insp-novedad-regresa').style.display='block';
-    ['Hidráulica','Mecánica/Motor','Succión/Presión','Eléctrica'].forEach(c=>{
-      causasBox.innerHTML+=`<button class="chip" onclick="seleccionarCausaInspector(this,'${c}')">${c}</button>`;
-    });
-  } else if(tipo==='Lodos'){
-    causaInspectorActual='Lodos';
-    document.getElementById('insp-novedad-regresa').style.display='block';
-  } else if(tipo==='Fuerza mayor'){
-    causaInspectorActual='Fuerza mayor';
-    regresaInspectorActual='NO';
-  } else if(tipo==='Factor humano'){
-    document.getElementById('insp-novedad-sub').style.display='block';
-    document.getElementById('insp-novedad-regresa').style.display='block';
-    ['Fatiga','Salud'].forEach(c=>{
-      causasBox.innerHTML+=`<button class="chip" onclick="seleccionarCausaInspector(this,'${c}')">${c}</button>`;
-    });
-  }
-  document.getElementById('insp-nov-si').classList.remove('sel');document.getElementById('insp-nov-no').classList.remove('sel');
+function resetNovedadTemp(){
+  tempTipoNovedad=null;tempCausa=null;tempRegresa=null;
 }
 
-function seleccionarCausaInspector(btn,causa){
-  causaInspectorActual=causa;
-  document.querySelectorAll('#insp-novedad-causas .chip').forEach(c=>c.classList.remove('active'));
-  btn.classList.add('active');
-}
-
-function seleccionarRegresaInspector(val){
-  regresaInspectorActual=val;
-  document.getElementById('insp-nov-si').classList.toggle('sel',val==='SI');
-  document.getElementById('insp-nov-no').classList.toggle('sel',val==='NO');
-}
-
-/* ==================== DIAGNÓSTICO INSPECTOR ==================== */
+/* ==================== DIAGNÓSTICO INSPECTOR (sin límite) ==================== */
 function actualizarDiagnosticoInspector(){
   const ml=Number(document.getElementById('insp-ml').value)||0;
   const box=document.getElementById('insp-diagnostico');
   if(ml>0){
     const horasNoJust=calcularHorasNoJust(ml);
-    const novAveria=STATE.novedades.filter(n=>['Hidráulica','Mecánica/Motor','Succión/Presión','Eléctrica'].includes(n.tipo)).length;
-    const novExplicada=STATE.novedades.filter(n=>['Fuerza mayor','Fatiga','Salud'].includes(n.tipo)).length;
-    const novLodos=STATE.novedades.filter(n=>n.tipo==='Lodos').length;
     let html='';
-    if(ml>=RANGO_MIN&&ml<=RANGO_MAX){html='<div class="legend-box legend-good">✅ Meta cumplida</div>';}
-    else if(ml<RANGO_MIN&&novAveria>0){html='<div class="justificar-box">🔧 Atención elementos — Horas por justificar: '+horasNoJust+' h</div>';}
-    else if(ml<RANGO_MIN&&novExplicada>0){html='<div class="justificar-box">ℹ️ Déficit justificable — Horas por justificar: '+horasNoJust+' h</div>';}
-    else if(ml<RANGO_MIN&&novLodos>0){html='<div class="justificar-box">📍 Revisar zona/ritmo — Horas por justificar: '+horasNoJust+' h</div>';}
-    else if(ml<RANGO_MIN){html='<div class="justificar-box">📍 Revisar zona/ritmo — Horas por justificar: '+horasNoJust+' h</div>';}
-    else if(ml>RANGO_MAX){html='<div class="justificar-box">📈 Justificar exceso — '+(ml-RANGO_MAX)+' ML</div>';}
+    if(ml>=RANGO_MIN && ml<=RANGO_MAX){html='<div class="legend-box legend-good">✅ Meta cumplida</div>';}
+    else if(ml<RANGO_MIN){html='<div class="obs-diagnostico">📍 Revisar zona/ritmo — Horas por justificar: '+horasNoJust+' h</div>';}
+    else if(ml>RANGO_MAX){html='<div class="obs-diagnostico">📈 Justificar exceso — '+(ml-RANGO_MAX)+' ML</div>';}
     box.innerHTML=html;
   } else {box.innerHTML='';}
 }
@@ -853,6 +938,8 @@ function mostrarFormularioActividades(conTramos){
   document.getElementById('form-ml').value='';
   document.getElementById('form-desob').value='';
   document.getElementById('form-m3').value='';
+  document.getElementById('form-ml-error').classList.remove('show');
+  document.getElementById('form-tramos-section').style.display=conTramos?'block':'none';
   abrirModal('modal-formulario');
 }
 
@@ -861,19 +948,38 @@ function mostrarInspector(){
   abrirModal('modal-inspector');
 }
 
+/* ✅ VALIDACIÓN REAL del formulario manual */
 function confirmarFormulario(){
   STATE.cierre.desob=document.getElementById('form-desob').value.trim();
   STATE.cierre.m3=Number(document.getElementById('form-m3').value)||0;
-  STATE.cierre.tramosManuales=document.getElementById('form-tramos').value.trim();
-  STATE.cierre.mlManual=Number(document.getElementById('form-ml').value)||0;
+  
+  const errEl = document.getElementById('form-ml-error');
+  
+  if(formularioConTramos){
+    const mlManual = Number(document.getElementById('form-ml').value) || 0;
+    
+    // ✅ Validar límite 130
+    if(mlManual < 0 || mlManual > ML_MAX_TRAMO){
+      errEl.classList.add('show');
+      toast(`⚠️ ML máximo: ${ML_MAX_TRAMO}`);
+      return;
+    }
+    errEl.classList.remove('show');
+    STATE.cierre.tramosManuales=document.getElementById('form-tramos').value.trim();
+    STATE.cierre.mlManual=mlManual;
+  }
+  
+  // ✅ Ahora va al modal de inspector
   cerrarModal('modal-formulario');
   mostrarInspector();
 }
 
+/* ✅ CONFIRMAR INSPECTOR → resumen final */
 function confirmarInspector(){
-  const inspector=document.getElementById('form-inspector').value;
+  const inspector = document.getElementById('form-inspector').value;
   if(!inspector){toast('Selecciona inspector');return;}
-  STATE.inspector=inspector;
+  STATE.inspector = inspector;
+  guardarEstado();
   cerrarModal('modal-inspector');
   irACierreJornada();
 }
@@ -885,37 +991,30 @@ function irACierreJornada(){
   renderResumen();
 }
 
-/* ==================== RESUMEN FINAL ==================== */
+/* ==================== RESUMEN ==================== */
 function renderResumen(){
   document.getElementById('rs-placa').textContent=STATE.placa;
   document.getElementById('rs-contratista').textContent=STATE.contratista;
   document.getElementById('rs-barrio').textContent=STATE.barrio;
+  document.getElementById('rs-inspector').textContent=STATE.inspector||'—';
   const mlSistema=calcularMLTotal();
   const mlTotal=mlSistema+STATE.cierre.mlManual;
   const horasNoJust=calcularHorasNoJust(mlTotal);
   document.getElementById('rs-ml').textContent=mlTotal+' ML';
   document.getElementById('rs-desob').textContent=STATE.cierre.desob||'—';
   document.getElementById('rs-m3').textContent=(STATE.m3Total||0)+STATE.cierre.m3+' m³';
-  
   const justificarBox=document.getElementById('rs-justificar');
-  const novAveria=STATE.novedades.filter(n=>['Hidráulica','Mecánica/Motor','Succión/Presión','Eléctrica'].includes(n.tipo)).length;
-  const novExplicada=STATE.novedades.filter(n=>['Fuerza mayor','Fatiga','Salud'].includes(n.tipo)).length;
-  const novLodos=STATE.novedades.filter(n=>n.tipo==='Lodos').length;
   let html='';
-  if(mlTotal>=RANGO_MIN&&mlTotal<=RANGO_MAX){html='<div class="legend-box legend-good">✅ Meta cumplida</div>';}
-  else if(mlTotal<RANGO_MIN&&novAveria>0){html='<div class="obs-diagnostico">🔧 Atención elementos — Horas por justificar: '+horasNoJust+' h<br><span style="font-size:12px;">Justifique en observaciones qué actividades se realizaron</span></div>';}
-  else if(mlTotal<RANGO_MIN&&novExplicada>0){html='<div class="obs-diagnostico">ℹ️ Déficit justificable — Horas por justificar: '+horasNoJust+' h<br><span style="font-size:12px;">Justifique en observaciones qué actividades se realizaron</span></div>';}
-  else if(mlTotal<RANGO_MIN&&novLodos>0){html='<div class="obs-diagnostico">📍 Revisar zona/ritmo — Horas por justificar: '+horasNoJust+' h<br><span style="font-size:12px;">Justifique en observaciones qué actividades se realizaron</span></div>';}
+  if(mlTotal>=RANGO_MIN && mlTotal<=RANGO_MAX){html='<div class="legend-box legend-good">✅ Meta cumplida</div>';}
   else if(mlTotal<RANGO_MIN){html='<div class="obs-diagnostico">📍 Revisar zona/ritmo — Horas por justificar: '+horasNoJust+' h<br><span style="font-size:12px;">Justifique en observaciones qué actividades se realizaron</span></div>';}
   else if(mlTotal>RANGO_MAX){html='<div class="obs-diagnostico">📈 Justificar exceso — '+(mlTotal-RANGO_MAX)+' ML<br><span style="font-size:12px;">Justifique por qué se lograron más ML en el mismo tiempo</span></div>';}
   justificarBox.innerHTML=html;
-  
   const tramosBox=document.getElementById('rs-tramos');
   tramosBox.innerHTML='<div class="section-label">Tramos</div>';
   STATE.tramos.forEach(t=>{
     const d=document.createElement('div');d.className='summary-line';
-    if(t.cierre&&t.cierre.apto==='SI'){d.innerHTML=`<span>✅ ${t.tramo}</span><strong>${t.cierre.ml} ML</strong>`;}
-    else if(t.cierre&&t.cierre.apto==='NO'){d.innerHTML=`<span>❌ ${t.tramo}</span><strong>${t.cierre.obs}</strong>`;}
+    if(t.cierre && t.cierre.apto==='SI'){d.innerHTML=`<span>✅ ${t.tramo}</span><strong>${t.cierre.ml} ML</strong>`;}
+    else if(t.cierre && t.cierre.apto==='NO'){d.innerHTML=`<span>❌ ${t.tramo}</span><strong>${t.cierre.obs}</strong>`;}
     else{d.innerHTML=`<span class="tramo-sin-cerrar">⚠️ ${t.tramo} — SIN CERRAR</span><strong>—</strong>`;}
     tramosBox.appendChild(d);
   });
@@ -926,15 +1025,15 @@ function renderResumen(){
   }
 }
 
-/* ==================== VOLVER ==================== */
-function volverFormulario(){
+function volverDashboard(){
   document.getElementById('screen-cierre').classList.remove('active');
-  preguntarVerificarActividades();
+  document.getElementById('screen-dashboard').classList.add('active');
+  renderDashboard();
 }
 
-/* ==================== PDF ==================== */
 function confirmarYExportar(){
   STATE.cierre.obs=document.getElementById('cierre-obs').value.trim();
+  enviarHitoRemoto('jornadaCierre', {mlTotal: calcularMLTotal()+STATE.cierre.mlManual, observaciones: STATE.cierre.obs});
   generarPDFCierre();
 }
 
@@ -943,75 +1042,48 @@ function generarPDFCierre(){
   const mlTotal=mlSistema+STATE.cierre.mlManual;
   const horasNoJust=calcularHorasNoJust(mlTotal);
   const fecha=STATE.horaInicio?new Date(STATE.horaInicio).toLocaleDateString('es-CO'):'';
-  const novAveria=STATE.novedades.filter(n=>['Hidráulica','Mecánica/Motor','Succión/Presión','Eléctrica'].includes(n.tipo)).length;
-  const novExplicada=STATE.novedades.filter(n=>['Fuerza mayor','Fatiga','Salud'].includes(n.tipo)).length;
-  const novLodos=STATE.novedades.filter(n=>n.tipo==='Lodos').length;
   let diagnostico='';
-  if(mlTotal>=RANGO_MIN&&mlTotal<=RANGO_MAX){diagnostico='✅ Meta cumplida';}
-  else if(mlTotal<RANGO_MIN&&novAveria>0){diagnostico=`🔧 Atención elementos — Horas por justificar: ${horasNoJust} h<br><span style="font-size:11px;">Justifique en observaciones qué actividades se realizaron</span>`;}
-  else if(mlTotal<RANGO_MIN&&novExplicada>0){diagnostico=`ℹ️ Déficit justificable — Horas por justificar: ${horasNoJust} h<br><span style="font-size:11px;">Justifique en observaciones qué actividades se realizaron</span>`;}
-  else if(mlTotal<RANGO_MIN&&novLodos>0){diagnostico=`📍 Revisar zona/ritmo — Horas por justificar: ${horasNoJust} h<br><span style="font-size:11px;">Justifique en observaciones qué actividades se realizaron</span>`;}
-  else if(mlTotal<RANGO_MIN){diagnostico=`📍 Revisar zona/ritmo — Horas por justificar: ${horasNoJust} h<br><span style="font-size:11px;">Justifique en observaciones qué actividades se realizaron</span>`;}
-  else if(mlTotal>RANGO_MAX){diagnostico=`📈 Justificar exceso — ${mlTotal-RANGO_MAX} ML<br><span style="font-size:11px;">Justifique por qué se lograron más ML en el mismo tiempo</span>`;}
-  
+  if(mlTotal>=RANGO_MIN && mlTotal<=RANGO_MAX){diagnostico='✅ Meta cumplida';}
+  else if(mlTotal<RANGO_MIN){diagnostico='📍 Revisar zona/ritmo — Horas por justificar: '+horasNoJust+' h';}
+  else if(mlTotal>RANGO_MAX){diagnostico='📈 Justificar exceso — '+(mlTotal-RANGO_MAX)+' ML';}
   const contenido=`
     <div style="font-family:Arial,sans-serif;color:#000;background:#fff;padding:20px;max-width:800px;margin:0 auto;">
-      <!-- ENCABEZADO -->
       <div style="background:#1a1a2e;color:#fff;padding:15px;border-radius:8px;margin-bottom:10px;text-align:center;">
         <h1 style="font-size:16px;font-weight:800;margin:0;">#_Mtto_Preventivo</h1>
         <p style="font-size:11px;margin:5px 0 0;">Hoja de Cierre de Jornada</p>
       </div>
-      
-      <!-- DATOS -->
       <div style="background:#fafafa;border:1px solid #f97316;border-radius:8px;padding:12px;margin-bottom:8px;">
         <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:6px;text-transform:uppercase;">Datos de la Jornada</div>
         <div style="font-size:12px;color:#000;">Placa: ${STATE.placa}<br>Contratista: ${STATE.contratista}<br>Fecha: ${fecha}<br>Inspector: ${STATE.inspector||'—'}</div>
       </div>
-      
-      <!-- TRAMOS -->
       <div style="background:#fafafa;border:1px solid #f97316;border-radius:8px;padding:12px;margin-bottom:8px;">
         <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:6px;text-transform:uppercase;">Tramos Aptos CCTV</div>
         ${STATE.tramos.filter(t=>t.cierre&&t.cierre.apto==='SI').map(t=>`<div style="font-size:12px;color:#000;">✅ ${t.tramo} — ${t.cierre.ml} ML</div>`).join('')||'<div style="font-size:12px;color:#000;">Sin tramos</div>'}
         ${STATE.cierre.tramosManuales?`<div style="font-size:12px;color:#000;">📝 ${STATE.cierre.tramosManuales} (manual) — ${STATE.cierre.mlManual} ML</div>`:''}
       </div>
-      
-      <!-- ACTIVIDADES -->
       <div style="background:#fafafa;border:1px solid #f97316;border-radius:8px;padding:12px;margin-bottom:8px;">
         <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:6px;text-transform:uppercase;">Actividades</div>
         <div style="font-size:12px;color:#000;">Desobstrucción: ${STATE.cierre.desob||'—'}<br>Carga de agua: ${(STATE.m3Total||0)+STATE.cierre.m3} m³</div>
       </div>
-      
-      <!-- MÉTRICAS -->
       <div style="background:#fafafa;border:1px solid #f97316;border-radius:8px;padding:12px;margin-bottom:8px;">
         <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:6px;text-transform:uppercase;">Métricas</div>
         <div style="font-size:12px;color:#000;">ML total: ${mlTotal} ML<br>Meta: 250 ML</div>
       </div>
-      
-      <!-- OBSERVACIONES CON 2 SUBCONJUNTOS -->
       <div style="background:#fafafa;border:1px solid #f97316;border-radius:8px;padding:12px;margin-bottom:8px;">
         <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:6px;text-transform:uppercase;">Observaciones</div>
         <div style="background:#fff8f0;border:2px solid #f59e0b;border-radius:8px;padding:10px;margin-bottom:10px;text-align:center;font-weight:700;color:#f59e0b;">${diagnostico}</div>
-        <div style="border-top:1px dashed #f97316;margin:10px 0;"></div>
         <div style="font-size:12px;color:#000;min-height:60px;">${STATE.cierre.obs||'Sin observaciones'}</div>
       </div>
-      
-      <!-- SEPARADOR -->
       <div style="border-top:2px solid #1a1a2e;margin:10px 0;"></div>
-      
-      <!-- BITÁCORA DETALLADA -->
       <div style="background:#fff;border:1px solid #333;border-radius:8px;padding:12px;">
-        <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:6px;text-transform:uppercase;">📋 Bitácora Detallada del Día</div>
+        <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:6px;text-transform:uppercase;">📋 Bitácora Detallada</div>
         <pre style="font-size:11px;color:#000;white-space:pre-wrap;font-family:monospace;margin:0;">${STATE.bitacoraInterna||'Sin registros'}</pre>
       </div>
-      
-      <!-- FIRMA -->
       <div style="display:flex;justify-content:space-between;font-size:10px;margin-top:15px;color:#000;">
         <div>Firma: ______________________</div>
         <div>Fecha: ${fecha}</div>
       </div>
-    </div>
-  `;
-  
+    </div>`;
   const iframe=document.createElement('iframe');
   iframe.style.position='fixed';iframe.style.right='0';iframe.style.bottom='0';
   iframe.style.width='0';iframe.style.height='0';iframe.style.border='0';
@@ -1029,17 +1101,15 @@ function generarPDFCierre(){
       setTimeout(reiniciarApp,2000);
     },500);
   };
-  setTimeout(()=>{iframe.contentWindow.focus();iframe.contentWindow.print();},300);
+  setTimeout(()=>{iframe.contentWindow.focus();iframe.contentWindow.print();},500);
 }
 
-/* ==================== BITÁCORA COMPLETA ==================== */
 function verBitacoraCompleta(){
   document.getElementById('bitacora-completa-text').textContent=STATE.bitacoraInterna||"No hay registros";
   abrirModal('modal-bitacora');
 }
 function copiarBitacoraCompleta(){copiarAlPortapapeles(STATE.bitacoraInterna||"No hay registros");}
 
-/* ==================== GUARDAR INSPECTOR ==================== */
 function guardarInspector(){
   if(confirm('¿Acepta y cierra?')){
     STATE.cierre.obs=document.getElementById('insp-obs').value.trim();
@@ -1047,16 +1117,13 @@ function guardarInspector(){
     STATE.cierre.mlManual=Number(document.getElementById('insp-ml').value)||0;
     STATE.cierre.desob=document.getElementById('insp-desob').value.trim();
     STATE.cierre.m3=Number(document.getElementById('insp-m3').value)||0;
-    if(novedadInspectorActual){
-      STATE.novedades.push({tipo:causaInspectorActual||novedadInspectorActual,regresa:regresaInspectorActual,hora:nowISO()});
-    }
     STATE.horaInicio=nowISO();
     STATE.horaFin=nowISO();
+    enviarHitoRemoto('inspectorCierre', {mlManual: STATE.cierre.mlManual});
     generarPDFCierre();
   }
 }
 
-/* ==================== REINICIAR ==================== */
 function reiniciarApp(){
   STATE = {
     placa:null, contratista:null, barrio:null, modo:null, gps:null,
@@ -1067,7 +1134,6 @@ function reiniciarApp(){
   };
   tempApto=null;tramoACerrar=null;tempTipoNovedad=null;tempCausa=null;tempRegresa=null;
   formularioConTramos=false;
-  novedadInspectorActual=null;causaInspectorActual=null;regresaInspectorActual=null;
   document.getElementById('screen-cierre').classList.remove('active');
   document.getElementById('screen-dashboard').classList.remove('active');
   document.getElementById('screen-inspector').classList.remove('active');
@@ -1086,22 +1152,32 @@ const MODAL_MAP={
   'modal-pregunta-verificar':'ov-pregunta-verificar','modal-formulario':'ov-formulario',
   'modal-inspector':'ov-inspector'
 };
-
 function abrirModal(id){
   document.getElementById(MODAL_MAP[id]).classList.add('active');
-  if(id==='modal-m3') prefillM3Barrio();
+  if(id === 'modal-m3'){
+    const field = document.getElementById('m3-barrio');
+    if(!field.value || field.value.trim() === ''){
+      field.value = STATE.barrio || '';
+    }
+  }
 }
-
 function cerrarModal(id){document.getElementById(MODAL_MAP[id]).classList.remove('active');}
 
-/* ==================== VERIFICAR CONEXIÓN ==================== */
 function verificarConexion(){
   const offlineEl=document.getElementById('offline-indicator');
   if(!navigator.onLine){offlineEl.style.display='block';}
   else{offlineEl.style.display='none';}
 }
-window.addEventListener('online',()=>{verificarConexion();procesarCola();});
+window.addEventListener('online',()=>{verificarConexion();procesarCola();cargarPlacas();});
 window.addEventListener('offline',verificarConexion);
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(reg => console.log('✅ SW registrado'))
+      .catch(err => console.error('❌ SW:', err));
+  });
+}
 </script>
 </body>
 </html>
