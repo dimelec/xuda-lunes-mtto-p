@@ -190,11 +190,6 @@
   </div>
 
   <div class="card">
-    <label>Desobstrucción</label>
-    <input type="text" id="insp-desob" placeholder="Tramo">
-  </div>
-
-  <div class="card">
     <label>Carga de agua (M3 total)</label>
     <input type="number" id="insp-m3" min="0" step="0.1" placeholder="0">
   </div>
@@ -240,7 +235,16 @@
     <div class="summary-line"><span>Placa</span><strong id="rs-placa"></strong></div>
     <div class="summary-line"><span>Contratista</span><strong id="rs-contratista"></strong></div>
     <div class="summary-line"><span>Barrio</span><strong id="rs-barrio"></strong></div>
-    <div class="summary-line"><span>Inspector</span><strong id="rs-inspector"></strong></div>
+    <label style="margin-top:14px;">Inspector</label>
+    <select id="rs-inspector-select">
+      <option value="">Selecciona quién cierra la jornada...</option>
+      <option>Marlon Ledezma</option>
+      <option>Luis Díaz</option>
+      <option>Luis Vergara</option>
+      <option>Armando Pájaro</option>
+      <option>Eider Mina</option>
+    </select>
+    <div class="error-msg" id="rs-inspector-error">⚠️ Debes seleccionar un inspector antes de cerrar</div>
   </div>
   <div class="card" id="rs-tramos"></div>
   <div class="card">
@@ -253,12 +257,13 @@
   <div class="obs-box">
     <label style="margin-top:0;">Observaciones</label>
     <div id="rs-justificar" style="margin-bottom:12px;"></div>
+    <div id="rs-avisos-repeticion" style="margin-bottom:12px;"></div>
     <div class="obs-separador"></div>
     <textarea id="cierre-obs" rows="4" placeholder="Justifique qué actividades se realizaron" class="obs-texto"></textarea>
   </div>
 
   <button class="btn secondary" onclick="volverDashboard()">Volver</button>
-  <button class="btn" onclick="confirmarYExportar()">🖨️ Imprimir PDF y Cerrar</button>
+  <button class="btn" id="btn-confirmar-cierre" onclick="confirmarYExportar()">🖨️ Imprimir PDF y Cerrar</button>
 </div>
 
 <!-- ==================== MODALES ==================== -->
@@ -276,7 +281,8 @@
     <button class="modal-close" onclick="cerrarModal('modal-desob')">✕</button>
     <h3>Desobstrucción</h3>
     <label>Tramo</label>
-    <input type="text" id="desob-tramo" maxlength="6">
+    <input type="text" id="desob-tramo" maxlength="6" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)">
+    <div class="error-msg" id="desob-tramo-error">⚠️ Ese tramo está abierto — ingresa uno diferente</div>
     <button class="btn" onclick="registrarDesobstruccion()">Registrar</button>
   </div>
 </div>
@@ -336,7 +342,7 @@
     <h3>⚠️ Antes de cerrar</h3>
     <p>¿Desea verificar o agregar actividades pendientes?</p>
     <button class="btn secondary" onclick="cerrarModal('modal-pregunta-verificar');mostrarFormularioActividades(true);">✅ SÍ, verificar</button>
-    <button class="btn" onclick="cerrarModal('modal-pregunta-verificar');mostrarInspector();">❌ NO, cerrar directo</button>
+    <button class="btn" onclick="cerrarModal('modal-pregunta-verificar');irACierreJornada();">❌ NO, cerrar directo</button>
   </div>
 </div>
 
@@ -348,9 +354,8 @@
     <label>1. Tramos (separados por coma)</label>
     <input type="text" id="form-tramos" placeholder="123, 456, 789">
 
-    <label>2. ML total (máx 130)</label>
-    <input type="number" id="form-ml" min="0" max="130" step="1" placeholder="75">
-    <div class="error-msg" id="form-ml-error">⚠️ El ML debe estar entre 0 y 130</div>
+    <label>2. ML total (sin límite)</label>
+    <input type="number" id="form-ml" min="0" step="1" placeholder="75">
 
     <label>3. Desobstrucción</label>
     <input type="text" id="form-desob" placeholder="Tramo">
@@ -359,23 +364,6 @@
     <input type="number" id="form-m3" min="0" step="0.1" placeholder="0">
 
     <button class="btn" onclick="confirmarFormulario()">Continuar</button>
-  </div>
-</div>
-
-<div class="overlay" id="ov-inspector">
-  <div class="modal">
-    <h3>👤 Seleccionar inspector</h3>
-    <p style="font-size:14px; color:var(--sub); margin-bottom:12px;">Selecciona quién cierra la jornada</p>
-    <label>Inspector</label>
-    <select id="form-inspector">
-      <option value="">Selecciona...</option>
-      <option>Marlon Ledezma</option>
-      <option>Luis Díaz</option>
-      <option>Luis Vergara</option>
-      <option>Armando Pájaro</option>
-      <option>Eider Mina</option>
-    </select>
-    <button class="btn" onclick="confirmarInspector()">Continuar al cierre</button>
   </div>
 </div>
 
@@ -425,6 +413,7 @@ let STATE = {
   horaInicio:null, horaFin:null, inspector:null,
   tramos:[], novedades:[], cerrada:false,
   actividadCount:0, bitacoraInterna:"", m3Total:0,
+  desobCount:{}, avisosRepeticion:[],
   cierre:{desob:'', m3:0, obs:'', tramosManuales:'', mlManual:0}
 };
 
@@ -537,28 +526,109 @@ async function reverseGeocode(gps){
   }catch(e){return"";}
 }
 
-async function getDireccion(gps){
-  if(!gps) return "";
-  try{
-    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${gps.lat}&lon=${gps.lng}&format=json&addressdetails=1&accept-language=es`);
-    const d = await r.json();
-    const a = d.address || {};
-    const road = a.road || a.pedestrian || a.footway || a.path || "";
-    const num = a.house_number || "";
-    if(!road) return "";
-    let roadAbbr = road
-      .replace(/^Calle\s+/i, "Cll ")
-      .replace(/^Carrera\s+/i, "Cra ")
-      .replace(/^Avenida\s+/i, "Av ")
-      .replace(/^Avenida Calle\s+/i, "Av Cll ")
-      .replace(/^Avenida Carrera\s+/i, "Av Cra ")
-      .replace(/^Diagonal\s+/i, "Diag ")
-      .replace(/^Transversal\s+/i, "Trans ")
-      .replace(/^Circular\s+/i, "Circ ");
-    if(num) return `${roadAbbr} # ${num}`;
-    return roadAbbr;
-  }catch(e){ return ""; }
+function abreviarVia(nombre){
+  return nombre
+    .replace(/^Calle\s+/i, "Cll ")
+    .replace(/^Carrera\s+/i, "Cra ")
+    .replace(/^Avenida Calle\s+/i, "Av Cll ")
+    .replace(/^Avenida Carrera\s+/i, "Av Cra ")
+    .replace(/^Avenida\s+/i, "Av ")
+    .replace(/^Diagonal\s+/i, "Diag ")
+    .replace(/^Transversal\s+/i, "Trans ")
+    .replace(/^Circular\s+/i, "Circ ");
 }
+
+/* ==================== CADENA DE RESOLUCIÓN DE DIRECCIÓN ====================
+   Nivel 1: vía + número de casa (Nominatim)
+   Nivel 2: cruce de calles más cercano (Overpass), cuando no hay número
+   Nivel 3: coordenadas GPS crudas, si no hay ninguna vía cercana
+   Con caché por coordenada redondeada (~10m) para no repetir consultas. */
+const direccionCache={};
+
+function claveCache(gps){return `${gps.lat.toFixed(4)},${gps.lng.toFixed(4)}`;}
+
+async function obtenerCruceOverpass(gps,viaPrincipal){
+  try{
+    const query=`[out:json][timeout:5];way(around:40,${gps.lat},${gps.lng})[highway][name];out tags;`;
+    const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:query});
+    const d=await r.json();
+    const nombres=[...new Set((d.elements||[]).map(e=>e.tags&&e.tags.name).filter(Boolean))];
+    const otra=nombres.find(n=>n.toLowerCase()!==viaPrincipal.toLowerCase());
+    if(otra) return `${viaPrincipal} con ${abreviarVia(otra)}`;
+    return '';
+  }catch(e){return '';}
+}
+
+async function resolverDireccion(gps){
+  if(!gps) return '';
+  const key=claveCache(gps);
+  if(direccionCache[key]!==undefined) return direccionCache[key];
+
+  let resultado='';
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${gps.lat}&lon=${gps.lng}&format=json&addressdetails=1&accept-language=es`);
+    const d=await r.json();
+    const a=d.address||{};
+    const road=a.road||a.pedestrian||a.footway||a.path||"";
+    const num=a.house_number||"";
+    const barrio=a.suburb||a.neighbourhood||a.quarter||a.city_district||a.village||"";
+    if(road){
+      const roadAbbr=abreviarVia(road);
+      if(num){
+        resultado=`${roadAbbr} # ${num}`;
+      } else {
+        const cruce=await obtenerCruceOverpass(gps,roadAbbr);
+        resultado=cruce||(barrio?`${roadAbbr}, ${barrio}`:roadAbbr);
+      }
+    }
+  }catch(e){}
+
+  if(!resultado){
+    resultado=`${gps.lat.toFixed(4)},${gps.lng.toFixed(4)}`; // Nivel 3: respaldo final
+  }
+
+  direccionCache[key]=resultado;
+  return resultado;
+}
+
+/* ==================== PREFETCH DE UBICACIÓN (dispara antes del tap) ==================== */
+let gpsPrefetch=null;
+function prefetchUbicacion(){
+  gpsPrefetch=(async()=>{
+    const gps=await getGPS();
+    const dir=await resolverDireccion(gps);
+    return {gps,dir};
+  })();
+}
+
+function withTimeout(promise,ms,fallback){
+  return Promise.race([
+    promise,
+    new Promise(resolve=>setTimeout(()=>resolve(fallback),ms))
+  ]);
+}
+
+/* Devuelve {gps,dir} para armar un hito. Si el prefetch no alcanzó a resolver
+   en 3s, entrega lo que haya (dir="Resolviendo...") y actualiza el texto ya
+   guardado en la bitácora cuando la dirección real llegue (no bloqueante). */
+async function obtenerUbicacionParaHito(numActividad){
+  const promesa=gpsPrefetch||(async()=>{const gps=await getGPS();const dir=await resolverDireccion(gps);return{gps,dir};})();
+  const resultado=await withTimeout(promesa,3000,null);
+  if(resultado) return resultado;
+  const gps=await getGPS();
+  promesa.then(({dir})=>{
+    if(dir&&dir!=='Resolviendo...'){
+      STATE.bitacoraInterna=STATE.bitacoraInterna.replace(
+        new RegExp(`(\\[Actividad del dia #; ${numActividad}\\][\\s\\S]*?\\[Dir: )Resolviendo\\.\\.\\.(\\])`),
+        `$1${dir}$2`
+      );
+      guardarEstado();
+    }
+  });
+  return {gps,dir:'Resolviendo...'};
+}
+
+async function getDireccion(gps){return resolverDireccion(gps);}
 
 /* ==================== PREFILL BARRIO EN CARGA DE AGUA (GPS fresco) ==================== */
 async function prefillM3Barrio(){
@@ -594,6 +664,9 @@ function cargarEstado(){
       if(!saved.cerrada)STATE=saved;
     }
   }catch(e){}
+  // Defensivo: si la jornada venía de una versión anterior del código, estos campos pueden faltar
+  if(!STATE.desobCount) STATE.desobCount={};
+  if(!STATE.avisosRepeticion) STATE.avisosRepeticion=[];
 }
 
 /* ==================== COLA DE SINCRONIZACIÓN OFFLINE + ENVÍO ==================== */
@@ -675,7 +748,12 @@ document.getElementById('ap-barrio').addEventListener('input',e=>{
   validarApertura();
 });
 
-document.getElementById('btn-abrir-jornada').onclick=function(){
+function calcularTurno(horaISO){
+  const h=new Date(horaISO).getHours();
+  return (h>=6&&h<18)?'Diurno':'Nocturno'; // corte por defecto: 6:00 a 17:59 = Diurno
+}
+
+document.getElementById('btn-abrir-jornada').onclick=async function(){
   const barrioValor=document.getElementById('ap-barrio').value.trim();
   const inspector=detectarInspector(barrioValor);
   if(inspector){
@@ -694,6 +772,13 @@ document.getElementById('btn-abrir-jornada').onclick=function(){
     document.getElementById('screen-dashboard').classList.add('active');
     renderDashboard();
     enviarHitoRemoto('jornadaInicio', {});
+
+    // Actividad #1: Apertura de jornada
+    const turno=calcularTurno(STATE.horaInicio);
+    const gps=STATE.gps||await getGPS();
+    const dir=await resolverDireccion(gps);
+    const gpsText=gps?`${gps.lat},${gps.lng}`:'sin GPS';
+    registrarHito(`*Apertura de jornada*\n[Contratista: ${STATE.contratista}]\n[Turno: ${turno}]\n[Hora: ${fmtHora(STATE.horaInicio)}]\n[gps: ${gpsText}]\n[Dir: ${dir}]\n[Actividad del dia #; X]`);
   }
 };
 
@@ -762,11 +847,12 @@ function calcularHorasNoJust(ml){
 /* ==================== BITÁCORA ====================
    Encabezado va UNA sola vez en la bitácora acumulada (primer hito del día).
    Cada hito adicional entra sin encabezado repetido.
-   El portapapeles de cada hito individual (hito suelto) SÍ conserva su encabezado completo. */
+   El portapapeles de cada hito individual (hito suelto) SÍ conserva su encabezado completo,
+   con una línea en blanco entre encabezado y cuerpo. */
 function generarEncabezado(){
   const placaLimpia=STATE.placa?STATE.placa.replace(/\s+/g,''):'';
   const fecha=STATE.horaInicio?new Date(STATE.horaInicio).toLocaleDateString('es-CO'):'';
-  const barrio=STATE.barrio?capitalizar(STATE.barrio):'';
+  const barrio=STATE.barrio?STATE.barrio.toUpperCase():'';
   return `#_Mtto_Preventivo\n${placaLimpia}|${fecha}|${barrio}`;
 }
 
@@ -774,7 +860,7 @@ function registrarHito(bloqueTexto){
   STATE.actividadCount++;
   const enc=generarEncabezado();
   const bloque=bloqueTexto.replace('[Actividad del dia #; X]',`[Actividad del dia #; ${STATE.actividadCount}]`);
-  const completo=enc+'\n'+bloque; // esto es lo que va al portapapeles (hito suelto, con encabezado)
+  const completo=enc+'\n\n'+bloque; // hito suelto: encabezado + línea en blanco + cuerpo (va al portapapeles)
 
   if(!STATE.bitacoraInterna){
     STATE.bitacoraInterna = enc+'\n\n'+bloque; // primer hito: encabezado + bloque
@@ -787,12 +873,12 @@ function registrarHito(bloqueTexto){
 }
 
 function copiarAlPortapapeles(texto){
-  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(texto).then(()=>toast("✅ Copiado")).catch(()=>fallbackCopy(texto));}
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(texto).then(()=>toast("✅ Copiado — pégalo en WhatsApp 📲")).catch(()=>fallbackCopy(texto));}
   else{fallbackCopy(texto);}
 }
 function fallbackCopy(texto){
   const ta=document.createElement('textarea');ta.value=texto;document.body.appendChild(ta);ta.select();
-  try{document.execCommand('copy');toast("✅ Copiado");}catch(e){toast("❌ Error");}
+  try{document.execCommand('copy');toast("✅ Copiado — pégalo en WhatsApp 📲");}catch(e){toast("❌ Error");}
   document.body.removeChild(ta);
 }
 
@@ -800,21 +886,23 @@ function fallbackCopy(texto){
 document.getElementById('nuevo-tramo-nombre').addEventListener('input',e=>{
   e.target.value=e.target.value.replace(/[^0-9]/g,'').slice(0,6);
   document.getElementById('btn-abrir-tramo').disabled=!e.target.value.trim();
+  if(e.target.value.length===1) prefetchUbicacion(); // primer dígito: dispara la ubicación de una vez
 });
 
 async function abrirTramo(){
   const nombre=document.getElementById('nuevo-tramo-nombre').value.trim();
-  const gps=await getGPS();
-  const dir=gps?await getDireccion(gps):'';
+  const numActividad=STATE.actividadCount+1;
+  const {gps,dir}=await obtenerUbicacionParaHito(numActividad);
   const id='t'+Date.now();
   STATE.tramos.push({id,tramo:nombre,horaInicio:nowISO(),gps,dir,cierre:null,eventos:[]});
   STATE.tramoActivoId=id;
   guardarEstado();
   const gpsText=gps?`${gps.lat},${gps.lng}`:'sin GPS';
-  registrarHito(`Apertura de tramo\n[Tramo: ${nombre}]\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Dir: ${dir}]\n[Actividad del dia #; X]`);
+  registrarHito(`*Apertura de tramo*\n[Tramo: ${nombre}]\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Dir: ${dir}]\n[Actividad del dia #; X]`);
   enviarHitoRemoto('tramoInicio', {tramo: nombre, lat: gps?gps.lat:'', lng: gps?gps.lng:'', direccion: dir});
   document.getElementById('nuevo-tramo-nombre').value="";
   document.getElementById('btn-abrir-tramo').disabled=true;
+  gpsPrefetch=null;
   renderDashboard();
 }
 
@@ -857,12 +945,16 @@ function validarCierreTramo(){
 }
 
 async function confirmarCierreTramo(){
+  const btn = document.getElementById('btn-confirmar-cierre-tramo');
+  if(btn.disabled) return;
   const tramo=STATE.tramos.find(t=>t.id===tramoACerrar);
   if(!tramo)return;
+  btn.disabled=true; // bloqueo anti doble-toque
   if(tempApto==='SI'){
     const ml = Number(document.getElementById('ct-ml').value);
     if(ml <= 0 || ml > ML_MAX_TRAMO){
       toast(`⚠️ ML inválido (1 a ${ML_MAX_TRAMO})`);
+      btn.disabled=false;
       return;
     }
     tramo.cierre={apto:'SI',ml,obs:''};
@@ -871,26 +963,47 @@ async function confirmarCierreTramo(){
   }
   tramo.cerrado=true;tramo.horaFin=nowISO();
   guardarEstado();
-  const gps=await getGPS();
-  const dir=gps?await getDireccion(gps):'';
+  const {gps,dir}=await obtenerUbicacionParaHito(STATE.actividadCount+1);
   const gpsText=gps?`${gps.lat},${gps.lng}`:'sin GPS';
-  registrarHito(`Cierre de tramo\n[Tramo: ${tramo.tramo}]\n[Apto CCTV: ${tramo.cierre.apto}]\n${tramo.cierre.apto==='SI'?`[ML: ${tramo.cierre.ml}]`:`[Observación: ${tramo.cierre.obs}]`}\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Dir: ${dir}]\n[Actividad del dia #; X]`);
+  registrarHito(`*Cierre de tramo*\n[Tramo: ${tramo.tramo}]\n[Apto CCTV: ${tramo.cierre.apto}]\n${tramo.cierre.apto==='SI'?`[ML: ${tramo.cierre.ml}]`:`[Observación: ${tramo.cierre.obs}]`}\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Dir: ${dir}]\n[Actividad del dia #; X]`);
   enviarHitoRemoto('tramoCierre', {tramo: tramo.tramo, aptoCCTV: tramo.cierre.apto, ml: tramo.cierre.ml, observacion: tramo.cierre.obs, lat: gps?gps.lat:'', lng: gps?gps.lng:'', direccion: dir});
+  gpsPrefetch=null;
   cerrarModal('modal-cierre-tramo');tramoACerrar=null;renderDashboard();
 }
 
-/* ==================== DESOBSTRUCCIÓN ==================== */
+/* ==================== DESOBSTRUCCIÓN ====================
+   Regla: mientras el tramo esté abierto, la desobstrucción NO puede usar ese mismo número.
+   Fuera de eso, un mismo tramo sí puede repetirse varias veces en la jornada — pero si se
+   repite, se genera un aviso automático que aparece en observaciones del cierre. */
 async function registrarDesobstruccion(){
   const activo=STATE.tramos.find(t=>t.id===STATE.tramoActivoId&&!t.cierre);
   if(!activo){toast("No hay tramo activo");return;}
-  const tramoTxt=document.getElementById('desob-tramo').value.trim()||activo.tramo;
+  const tramoTxt=document.getElementById('desob-tramo').value.trim();
+  const errEl=document.getElementById('desob-tramo-error');
+  if(!tramoTxt){toast("Ingresa el número de tramo");return;}
+  if(tramoTxt===activo.tramo){
+    errEl.classList.add('show');
+    return;
+  }
+  errEl.classList.remove('show');
   activo.eventos.push({tipo:'Desobstrucción',tramo:tramoTxt,hora:nowISO()});
+
+  // Contador de repeticiones del mismo tramo en desobstrucción durante la jornada
+  if(!STATE.desobCount) STATE.desobCount={};
+  if(!STATE.avisosRepeticion) STATE.avisosRepeticion=[];
+  STATE.desobCount[tramoTxt]=(STATE.desobCount[tramoTxt]||0)+1;
+  if(STATE.desobCount[tramoTxt]>1){
+    const aviso=`⚠️ Tramo ${tramoTxt} repetido ${STATE.desobCount[tramoTxt]} veces en desobstrucción esta jornada`;
+    const idx=STATE.avisosRepeticion.findIndex(a=>a.startsWith(`⚠️ Tramo ${tramoTxt} repetido`));
+    if(idx>=0) STATE.avisosRepeticion[idx]=aviso; else STATE.avisosRepeticion.push(aviso);
+  }
+
   guardarEstado();
-  const gps=await getGPS();
-  const dir=gps?await getDireccion(gps):'';
+  const {gps,dir}=await obtenerUbicacionParaHito(STATE.actividadCount+1);
   const gpsText=gps?`${gps.lat},${gps.lng}`:'sin GPS';
-  registrarHito(`Desobstrucción\n[Tramo: ${tramoTxt}]\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Dir: ${dir}]\n[Actividad del dia #; X]`);
+  registrarHito(`*Desobstrucción*\n[Tramo: ${tramoTxt}]\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Dir: ${dir}]\n[Actividad del dia #; X]`);
   enviarHitoRemoto('desob', {tramo: tramoTxt, lat: gps?gps.lat:'', lng: gps?gps.lng:'', direccion: dir});
+  gpsPrefetch=null;
   document.getElementById('desob-tramo').value="";
   cerrarModal('modal-desob');renderDashboard();
 }
@@ -899,13 +1012,13 @@ async function registrarDesobstruccion(){
 async function registrarM3(){
   const valor=Number(document.getElementById('m3-valor').value)||0;
   const barrioM3=capitalizar(document.getElementById('m3-barrio').value.trim())||STATE.barrio;
-  const gps=await getGPS();
-  const dir=gps?await getDireccion(gps):'';
+  const {gps,dir}=await obtenerUbicacionParaHito(STATE.actividadCount+1);
   STATE.m3Total=(STATE.m3Total||0)+valor;
   guardarEstado();
   const gpsText=gps?`${gps.lat},${gps.lng}`:'sin GPS';
-  registrarHito(`Carga de agua\n[M3: ${valor}]\n[Barrio: ${barrioM3}]\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Dir: ${dir}]\n[Actividad del dia #; X]`);
+  registrarHito(`*Carga de agua*\n[M3: ${valor}]\n[Barrio: ${barrioM3}]\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Dir: ${dir}]\n[Actividad del dia #; X]`);
   enviarHitoRemoto('m3', {valor, barrioM3, lat: gps?gps.lat:'', lng: gps?gps.lng:'', direccion: dir});
+  gpsPrefetch=null;
   document.getElementById('m3-valor').value="";document.getElementById('m3-barrio').value="";
   cerrarModal('modal-m3');
 }
@@ -929,6 +1042,7 @@ function seleccionarTipoNovedad(btn,tipo){
     tempCausa='Lodos';
     document.getElementById('novedad-regresa-box').style.display='block';
   } else if(tipo==='Fuerza mayor'){
+    // Fuerza mayor: sin Causa/Motivo, sin Observaciones — solo confirmar
     tempCausa='Fuerza mayor';
     tempRegresa='NO';
     document.getElementById('btn-registrar-novedad').disabled=false;
@@ -964,14 +1078,44 @@ function validarNovedad(){
 }
 
 async function registrarNovedad(){
-  STATE.novedades.push({tipo:tempCausa||tempTipoNovedad,regresa:tempRegresa,hora:nowISO()});
+  const btn=document.getElementById('btn-registrar-novedad');
+  if(btn.disabled) return;
+  const motivo=tempCausa||tempTipoNovedad;
+  const noRegresa = tempRegresa==='NO';
+  btn.disabled=true; // bloqueo anti doble-toque
+  STATE.novedades.push({tipo:motivo,regresa:tempRegresa,hora:nowISO()});
   guardarEstado();
-  const gps=await getGPS();
-  const dir=gps?await getDireccion(gps):'';
+  const {gps,dir}=await obtenerUbicacionParaHito(STATE.actividadCount+1);
   const gpsText=gps?`${gps.lat},${gps.lng}`:'sin GPS';
-  registrarHito(`Novedad\n[Tipo: ${tempCausa||tempTipoNovedad}]\n[Regresa: ${tempRegresa||'N/A'}]\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Dir: ${dir}]\n[Actividad del dia #; X]`);
-  enviarHitoRemoto('novedad', {causa: tempCausa||tempTipoNovedad, regresa: tempRegresa, lat: gps?gps.lat:'', lng: gps?gps.lng:'', direccion: dir});
+  registrarHito(`*Novedad*\n[Tipo: ${motivo}]\n[Regresa: ${tempRegresa||'N/A'}]\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Dir: ${dir}]\n[Actividad del dia #; X]`);
+  enviarHitoRemoto('novedad', {causa: motivo, regresa: tempRegresa, lat: gps?gps.lat:'', lng: gps?gps.lng:'', direccion: dir});
+  gpsPrefetch=null;
   cerrarModal('modal-novedad');
+  btn.disabled=false;
+
+  if(noRegresa){
+    await cerrarTramoPorNoRegresa(motivo);
+  }
+}
+
+/* ==================== NO REGRESA: CASCADA AUTOMÁTICA ====================
+   Aplica a cualquier novedad con "Regresa: No" (incluye Fuerza mayor, que
+   siempre fuerza NO). Cierra el tramo abierto (si existe) con Apto CCTV = NO
+   y el motivo de la novedad como observación, y salta directo a la pantalla
+   de Resumen (sin pasar por la pregunta de verificar actividades). */
+async function cerrarTramoPorNoRegresa(motivo){
+  const activo=STATE.tramos.find(t=>t.id===STATE.tramoActivoId&&!t.cierre);
+  if(activo){
+    activo.cierre={apto:'NO',ml:0,obs:motivo};
+    activo.cerrado=true;activo.horaFin=nowISO();
+    guardarEstado();
+    const {gps,dir}=await obtenerUbicacionParaHito(STATE.actividadCount+1);
+    const gpsText=gps?`${gps.lat},${gps.lng}`:'sin GPS';
+    registrarHito(`*Cierre de tramo*\n[Tramo: ${activo.tramo}]\n[Apto CCTV: NO]\n[Observación: ${motivo}]\n[Hora: ${fmtHora(nowISO())}]\n[gps: ${gpsText}]\n[Dir: ${dir}]\n[Actividad del dia #; X]`);
+    enviarHitoRemoto('tramoCierre', {tramo: activo.tramo, aptoCCTV: 'NO', ml: 0, observacion: motivo, lat: gps?gps.lat:'', lng: gps?gps.lng:'', direccion: dir});
+    gpsPrefetch=null;
+  }
+  irACierreJornada();
 }
 
 /* ==================== NOVEDAD INSPECTOR ==================== */
@@ -1046,40 +1190,26 @@ function mostrarFormularioActividades(conTramos){
   document.getElementById('form-ml').value='';
   document.getElementById('form-desob').value='';
   document.getElementById('form-m3').value='';
-  document.getElementById('form-ml-error').classList.remove('show');
   abrirModal('modal-formulario');
 }
 
-function mostrarInspector(){
-  document.getElementById('form-inspector').value='';
-  abrirModal('modal-inspector');
-}
-
+/* Ingreso manual: valida que ningún tramo escrito ya esté registrado como ejecutado/cerrado */
 function confirmarFormulario(){
-  STATE.cierre.desob=document.getElementById('form-desob').value.trim();
-  STATE.cierre.m3=Number(document.getElementById('form-m3').value)||0;
-
-  const mlManual = Number(document.getElementById('form-ml').value) || 0;
-  const errEl = document.getElementById('form-ml-error');
-  if(mlManual < 0 || mlManual > ML_MAX_TRAMO){
-    errEl.classList.add('show');
-    toast(`⚠️ ML máximo: ${ML_MAX_TRAMO}`);
+  const tramosManualesRaw=document.getElementById('form-tramos').value.trim();
+  const tramosManualesArr=tramosManualesRaw.split(',').map(s=>s.trim()).filter(Boolean);
+  const tramosEjecutados=STATE.tramos.filter(t=>t.cierre).map(t=>t.tramo);
+  const duplicado=tramosManualesArr.find(t=>tramosEjecutados.includes(t));
+  if(duplicado){
+    toast(`⚠️ Tramo ${duplicado} ya está registrado como ejecutado`);
     return;
   }
-  errEl.classList.remove('show');
 
-  STATE.cierre.tramosManuales=document.getElementById('form-tramos').value.trim();
+  STATE.cierre.desob=document.getElementById('form-desob').value.trim();
+  STATE.cierre.m3=Number(document.getElementById('form-m3').value)||0;
+  const mlManual=Number(document.getElementById('form-ml').value)||0;
+  STATE.cierre.tramosManuales=tramosManualesRaw;
   STATE.cierre.mlManual=mlManual;
   cerrarModal('modal-formulario');
-  mostrarInspector();
-}
-
-function confirmarInspector(){
-  const inspector=document.getElementById('form-inspector').value;
-  if(!inspector){toast('Selecciona inspector');return;}
-  STATE.inspector=inspector;
-  guardarEstado();
-  cerrarModal('modal-inspector');
   irACierreJornada();
 }
 
@@ -1095,7 +1225,11 @@ function renderResumen(){
   document.getElementById('rs-placa').textContent=STATE.placa;
   document.getElementById('rs-contratista').textContent=STATE.contratista;
   document.getElementById('rs-barrio').textContent=STATE.barrio;
-  document.getElementById('rs-inspector').textContent=STATE.inspector||'—';
+
+  const inspectorSel=document.getElementById('rs-inspector-select');
+  if(STATE.inspector) inspectorSel.value=STATE.inspector;
+  document.getElementById('rs-inspector-error').classList.remove('show');
+
   const mlSistema=calcularMLTotal();
   const mlTotal=mlSistema+STATE.cierre.mlManual;
   const horasNoJust=calcularHorasNoJust(mlTotal);
@@ -1115,6 +1249,10 @@ function renderResumen(){
   else if(mlTotal<RANGO_MIN){html='<div class="obs-diagnostico">📍 Revisar zona/ritmo — Horas por justificar: '+horasNoJust+' h<br><span style="font-size:12px;">Justifique en observaciones qué actividades se realizaron</span></div>';}
   else if(mlTotal>RANGO_MAX){html='<div class="obs-diagnostico">📈 Justificar exceso — '+(mlTotal-RANGO_MAX)+' ML<br><span style="font-size:12px;">Justifique por qué se lograron más ML en el mismo tiempo</span></div>';}
   justificarBox.innerHTML=html;
+
+  // Avisos de tramos repetidos en desobstrucción durante la jornada
+  const avisosBox=document.getElementById('rs-avisos-repeticion');
+  avisosBox.innerHTML=(STATE.avisosRepeticion||[]).map(a=>`<div class="obs-diagnostico" style="margin-bottom:8px;">${a}</div>`).join('');
 
   const tramosBox=document.getElementById('rs-tramos');
   tramosBox.innerHTML='<div class="section-label">Tramos</div>';
@@ -1138,10 +1276,48 @@ function volverDashboard(){
   renderDashboard();
 }
 
-/* ==================== PDF ==================== */
+/* ==================== TEXTO DEL INFORME (misma fuente para PDF y portapapeles) ==================== */
+function construirTextoInformeCierre(){
+  const mlSistema=calcularMLTotal();
+  const mlTotal=mlSistema+STATE.cierre.mlManual;
+  const fecha=STATE.horaInicio?new Date(STATE.horaInicio).toLocaleDateString('es-CO'):'';
+  let txt=`#_Mtto_Preventivo — Cierre de jornada\n`;
+  txt+=`Placa: ${STATE.placa}\nContratista: ${STATE.contratista}\nBarrio: ${STATE.barrio?STATE.barrio.toUpperCase():''}\nFecha: ${fecha}\nInspector: ${STATE.inspector||'—'}\n\n`;
+  txt+=`ML total: ${mlTotal} ML\nDesobstrucción: ${STATE.cierre.desob||'—'}\nCarga de agua: ${(STATE.m3Total||0)+STATE.cierre.m3} m³\n`;
+  if(STATE.avisosRepeticion&&STATE.avisosRepeticion.length){
+    txt+=`\n${STATE.avisosRepeticion.join('\n')}\n`;
+  }
+  txt+=`\nObservaciones:\n${STATE.cierre.obs||'Sin observaciones'}\n\n`;
+  txt+=`Bitácora del día:\n${STATE.bitacoraInterna||'Sin registros'}`;
+  return txt;
+}
+
+/* ==================== PDF ====================
+   Al confirmar el cierre: (1) bloquea el botón para evitar doble toque,
+   (2) copia al portapapeles el mismo texto que se usa para el informe,
+   (3) genera el PDF/impresión. */
 function confirmarYExportar(){
+  const btn=document.getElementById('btn-confirmar-cierre');
+  if(btn.disabled) return;
+
+  const inspectorSel=document.getElementById('rs-inspector-select');
+  const inspectorErr=document.getElementById('rs-inspector-error');
+  if(!inspectorSel.value){
+    inspectorErr.classList.add('show');
+    inspectorSel.focus();
+    return;
+  }
+  inspectorErr.classList.remove('show');
+  STATE.inspector=inspectorSel.value;
+  guardarEstado();
+
+  btn.disabled=true;
+  btn.textContent='✅ Confirmado — procesando...';
+
   STATE.cierre.obs=document.getElementById('cierre-obs').value.trim();
   enviarHitoRemoto('jornadaCierre', {mlTotal: calcularMLTotal()+STATE.cierre.mlManual, observaciones: STATE.cierre.obs});
+
+  copiarAlPortapapeles(construirTextoInformeCierre());
   generarPDFCierre();
 }
 
@@ -1161,6 +1337,10 @@ function generarPDFCierre(){
   else if(mlTotal<RANGO_MIN){diagnostico=`📍 Revisar zona/ritmo — Horas por justificar: ${horasNoJust} h<br><span style="font-size:11px;">Justifique en observaciones qué actividades se realizaron</span>`;}
   else if(mlTotal>RANGO_MAX){diagnostico=`📈 Justificar exceso — ${mlTotal-RANGO_MAX} ML<br><span style="font-size:11px;">Justifique por qué se lograron más ML en el mismo tiempo</span>`;}
 
+  const avisosHTML=(STATE.avisosRepeticion&&STATE.avisosRepeticion.length)
+    ? `<div style="background:#fff8f0;border:2px solid #f59e0b;border-radius:8px;padding:10px;margin-bottom:10px;color:#f59e0b;font-weight:700;">${STATE.avisosRepeticion.join('<br>')}</div>`
+    : '';
+
   const contenido=`
     <div style="font-family:Arial,sans-serif;color:#000;background:#fff;padding:20px;max-width:800px;margin:0 auto;">
       <!-- ENCABEZADO -->
@@ -1172,7 +1352,7 @@ function generarPDFCierre(){
       <!-- DATOS -->
       <div style="background:#fafafa;border:1px solid #f97316;border-radius:8px;padding:12px;margin-bottom:8px;">
         <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:6px;text-transform:uppercase;">Datos de la Jornada</div>
-        <div style="font-size:12px;color:#000;">Placa: ${STATE.placa}<br>Contratista: ${STATE.contratista}<br>Fecha: ${fecha}<br>Inspector: ${STATE.inspector||'—'}</div>
+        <div style="font-size:12px;color:#000;">Placa: ${STATE.placa}<br>Contratista: ${STATE.contratista}<br>Barrio: ${STATE.barrio?STATE.barrio.toUpperCase():''}<br>Fecha: ${fecha}<br>Inspector: ${STATE.inspector||'—'}</div>
       </div>
 
       <!-- TRAMOS -->
@@ -1198,6 +1378,7 @@ function generarPDFCierre(){
       <div style="background:#fafafa;border:1px solid #f97316;border-radius:8px;padding:12px;margin-bottom:8px;">
         <div style="font-size:10px;font-weight:800;color:#1a1a2e;margin-bottom:6px;text-transform:uppercase;">Observaciones</div>
         <div style="background:#fff8f0;border:2px solid #f59e0b;border-radius:8px;padding:10px;margin-bottom:10px;text-align:center;font-weight:700;color:#f59e0b;">${diagnostico}</div>
+        ${avisosHTML}
         <div style="border-top:1px dashed #f97316;margin:10px 0;"></div>
         <div style="font-size:12px;color:#000;min-height:60px;">${STATE.cierre.obs||'Sin observaciones'}</div>
       </div>
@@ -1252,7 +1433,6 @@ function guardarInspector(){
     STATE.cierre.obs=document.getElementById('insp-obs').value.trim();
     STATE.cierre.tramosManuales=document.getElementById('insp-tramos').value.trim();
     STATE.cierre.mlManual=Number(document.getElementById('insp-ml').value)||0;
-    STATE.cierre.desob=document.getElementById('insp-desob').value.trim();
     STATE.cierre.m3=Number(document.getElementById('insp-m3').value)||0;
     if(novedadInspectorActual){
       STATE.novedades.push({tipo:causaInspectorActual||novedadInspectorActual,regresa:regresaInspectorActual,hora:nowISO()});
@@ -1271,6 +1451,7 @@ function reiniciarApp(){
     horaInicio:null, horaFin:null, inspector:null,
     tramos:[], novedades:[], cerrada:false,
     actividadCount:0, bitacoraInterna:"", m3Total:0,
+    desobCount:{}, avisosRepeticion:[],
     cierre:{desob:'', m3:0, obs:'', tramosManuales:'', mlManual:0}
   };
   tempApto=null;tramoACerrar=null;tempTipoNovedad=null;tempCausa=null;tempRegresa=null;
@@ -1284,6 +1465,8 @@ function reiniciarApp(){
   document.getElementById('ap-barrio').value='';
   document.getElementById('btn-abrir-jornada').disabled=true;
   document.getElementById('advertencia-inspector').classList.remove('show');
+  document.getElementById('btn-confirmar-cierre').disabled=false;
+  document.getElementById('btn-confirmar-cierre').textContent='🖨️ Imprimir PDF y Cerrar';
   initGPSApertura();
 }
 
@@ -1291,13 +1474,13 @@ function reiniciarApp(){
 const MODAL_MAP={
   'modal-bitacora':'ov-bitacora','modal-desob':'ov-desob','modal-m3':'ov-m3',
   'modal-novedad':'ov-novedad','modal-cierre-tramo':'ov-cierre-tramo',
-  'modal-pregunta-verificar':'ov-pregunta-verificar','modal-formulario':'ov-formulario',
-  'modal-inspector':'ov-inspector'
+  'modal-pregunta-verificar':'ov-pregunta-verificar','modal-formulario':'ov-formulario'
 };
 
 function abrirModal(id){
   document.getElementById(MODAL_MAP[id]).classList.add('active');
-  if(id==='modal-m3') prefillM3Barrio();
+  if(id==='modal-m3'){ prefillM3Barrio(); prefetchUbicacion(); }
+  if(['modal-desob','modal-novedad','modal-cierre-tramo'].includes(id)) prefetchUbicacion();
 }
 
 function cerrarModal(id){document.getElementById(MODAL_MAP[id]).classList.remove('active');}
