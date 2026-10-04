@@ -1,6 +1,7 @@
-const CACHE_NAME = 'mtto-preventivo-v1';
+const CACHE_NAME = 'mtto-preventivo-v2';
 const APP_SHELL = [
   './preventivo.html',
+  './index.html',
   './manifest.json',
   './icon.png'
 ];
@@ -24,10 +25,26 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // No cachear ni interceptar llamadas externas (Google Forms, Nominatim GPS, etc.)
-  // para no romper el envío de datos ni el reverse-geocoding.
+  // No interceptar llamadas externas (Google Forms, Nominatim GPS, motor)
   if (url.origin !== self.location.origin) return;
 
+  // HTML: red primero, caché como respaldo
+  if (event.request.mode === 'navigate' || url.pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Assets: caché primero, red como respaldo
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
