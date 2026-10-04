@@ -345,7 +345,8 @@ $("placa").onchange=async()=>{
   ponerBT("",false,"Consultando programación...");
   $("ap-hint").textContent="Consultando programación...";
   try{
-    const d=await jsonp({action:"tareasPorPlaca",placa:p,fecha:new Date().toISOString().slice(0,10)});
+    const contratista=(PLACAS.find(x=>x[0]===p)||[,""])[1]||"";
+const d=await jsonp({action:"tareasPorPlaca",placa:p,contratista:contratista,fecha:new Date().toISOString().slice(0,10)});
     if(d&&d.ok&&Array.isArray(d.tareas)&&d.tareas.length){
       tareas=d.tareas;
       $("ap-hint").textContent="";
